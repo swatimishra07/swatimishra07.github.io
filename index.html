@@ -2,12 +2,2014 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>D3 Page Template</title>
-		<script type="text/javascript" src="d3/d3.js"></script>
+        <title>US Energy Information Visualization</title>
+		<script type="text/javascript" src="../d3/d3.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.min.js" charset="utf-8"></script>
+		<style type = "text/css">
+			.axis path, .axis line 
+			{
+				fill: none;
+				stroke: black;
+				shape-rendering: crispEdges;
+			}
+			.tick text 
+			{
+				fill: black;
+				font-size: 16px;
+			}
+			.heading
+			{
+			    font-family:    Arial, Helvetica, sans-serif;
+                font-size:      40px;
+                font-weight:    bold;
+				color:		blue;
+			}
+			.Footer
+			{
+				font-family:    Arial, Helvetica, sans-serif;
+                font-size:      20px;
+                font-weight:    bold;
+				color:			grey;
+			
+			}
+		</style>
+		
     </head>
     <body>
-        <script type="text/javascript">
-            // Your beautiful D3 code will go here
-        </script>
+		<div id="mainDiv" style="position: absolute; left: 450px; top: 10px" class="heading">US Energy Information Administration</div>
+		<div id="mainDiv" style="position: absolute; left: 650px; top: 60px" class="Footer">INFO-H590 PROJECT</div>
+		<svg id="mainSVG" width="1600" height="1000" style="position: center; left: 200px; top: 200px">
+			
+		</svg>
+		<select id="selectionWidgetCountry" style="position: absolute; left: 450px; top: 150px">
+			
+		</select>
+		<select id="selectionWidgetYear" style="position: absolute; left: 1170px; top: 150px">
+			
+		</select>
+		<select id="selectionWidgetEnergy" style="position: absolute; left: 150px; top: 150px">
+			
+		</select>
+		
+		</select>
+		<select id="selectionWidgetEnergyS" style="position: absolute; left: 900px; top: 150px">
+			
+		</select>
+		<button id="LineCButton" style="position: absolute; left: 150px; top: 100px; width:600px; height: 20px">Line Chart</button>
+		<button id="BarCButton" style="position: absolute; left: 150px; top: 230px; width:600px; height: 20px" > Bar Chart</button>
+		<button id="AddCountry" style="position: absolute; left: 450px; top: 180px; width:120px; height: 20px ">Add Country</button>
+		<button id="ClearCountry" style="position: absolute; left: 580px; top: 180px; width:120px; height: 20px ">Clear Selection</button>
+		<button id="ScatterPlot" style="position: absolute; left: 900px; top: 100px; width:350px; height: 20px">Scatter Plot</button>
+		<button id="AddEnergy" style="position: absolute; left: 150px; top: 180px; width:120px; height: 20px ">Add Energy</button>
+		<button id="ClearEnergy" style="position: absolute; left: 280px; top: 180px; width:120px; height: 20px">Clear Selection</button>
+		<button id="AddEnergyS" style="position: absolute; left: 900px; top: 180px; width:120px; height: 20px ">Add Energy</button>
+		<button id="ClearEnergyS" style="position: absolute; left: 1030px; top: 180px; width:120px; height: 20px">Clear Selection</button>
+		
+	<script type="text/javascript">
+		var dataset = [];
+		//var ScatterDataset = [];
+		var YearStart;
+		var YearEnd;
+		var PPFlag = 0;
+		var SelectedCountries = [];
+		var MultipleDataSet = {};
+		var LineDataset = [];
+		var CompleteEnergyData = {};
+		var DefaultCountry = 'North America';
+		var Energy = {
+					  CoalConsumption:{},
+					  CoalProduction:{},
+					  PetroleumConsumption:{},
+					  PetroleumProduction:{},
+					  RenBiofeulConsumption:{},
+					  RenBiofeulProduction:{},
+					  RenElectricityConsumption:{},
+					  RenElectricityProduction:{},
+					  TotElectricityConsumption:{},
+					  TotElectricityProduction:{},
+					  PrimaryEnergyConsumption:{},
+					  PrimaryEnergyProduction:{},
+					  Co2EmmissionPerCapata:{}
+					  };
+
+		console.log(Energy);
+		
+		var ListOfCountries = ["-Select-"];
+		var ListOfYears = ["-Select-","1980","1981","1982","1983","1984","1985","1986","1987","1988","1989","1990",
+						   "1991","1992","1993","1994","1995","1996","1997","1998","1999","2000","2001",
+						   "2002","2003","2004","2005","2006","2007","2008","2009","2010","2011","2012"];
+		var EnergyList1 = ["-Select-","CoalProduction","CoalConsumption","PetroleumConsumption","PetroleumProduction",
+							"RenBiofeulConsumption","RenBiofeulProduction","RenElectricityConsumption","RenElectricityProduction",
+							"TotElectricityConsumption","TotElectricityProduction","PrimaryEnergyConsumption",
+							"PrimaryEnergyProduction","Co2EmmissionPerCapata"];
+		var EnergyList2 = ["-Select-","Coal","Petroleum","Renewable BioFeul","Renewable Electricity",
+							"Total Electricity", "Primary Energy","Co2Emission Per Capita"];
+		var ScatterPlotCountries=[];
+							 
+		Papa.parse('Data/coal_consumption.csv',
+				{
+				download: true,
+				header: true,
+				dynamicTyping: true,
+				complete: function(CoalConsumptionData){
+				
+				for (var row=0; row < CoalConsumptionData.data.length; row++)
+				{
+				  	// Load individual rows in the file
+					var CountryData = CoalConsumptionData.data[row];
+					
+					// make an object to store data for the current locality
+					var country = {
+									Name: CountryData.Locality,
+									EnergyValue:[],
+									Year: []
+								  };
+
+					for (var yearVal =1980; yearVal<=2012; yearVal++)
+						{
+						var value = CountryData[yearVal];
+						
+							// deal with missing data points
+							if (value === '--') {
+								value = 0;
+							}
+							else if (value === 'NA') {
+								value = 0;
+							}
+							else if (value === '(s)') {
+								value = 0;
+							}
+							else if (value === 'W') {
+								value = 0;
+							}
+							
+							country.EnergyValue.push(value);
+							country.Year.push(yearVal);
+							
+						}
+					
+						ListOfCountries.push(country.Name);
+						ScatterPlotCountries.push(country.Name);
+						Energy.CoalConsumption[country.Name]=country;
+						
+				}				
+				PPFlag++;
+				Papa.parse('Data/coal_production.csv',
+				{
+					download: true,
+					header: true,
+					dynamicTyping: true,
+					complete: function(CoalProductionData){
+					
+					for (var row=0; row < CoalProductionData.data.length; row++)
+					{
+						// Load individual rows in the file
+						var CountryData = CoalProductionData.data[row];
+					
+						var country = {
+										Name: CountryData.Locality,
+										EnergyValue:[],
+										Year: []
+									  }
+
+						for (var yearVal =1980; yearVal<=2012; yearVal++)
+							{
+							var value = CountryData[yearVal];
+							
+								// deal with missing data points
+								if (value === '--') {
+									value = 0;
+								}
+								else if (value === 'NA') {
+									value = 0;
+								}
+								else if (value === '(s)') {
+									value = 0;
+								}
+								else if (value === 'W') {
+									value = 0;
+								}
+								
+								country.EnergyValue.push(value);
+								country.Year.push(yearVal);
+							}
+						
+							Energy.CoalProduction[country.Name]=country;
+							
+					}
+					PPFlag++;
+					Papa.parse('Data/petroleum_consumption.csv',
+					{
+						download: true,
+						header: true,
+						dynamicTyping: true,
+						complete: function(PetroleumConsumptionData){
+						
+						for (var row=0; row < PetroleumConsumptionData.data.length; row++)
+						{
+							// Load individual rows in the file
+							var CountryData = PetroleumConsumptionData.data[row];
+						
+							var country = {
+											Name: CountryData.Locality,
+											EnergyValue:[],
+											Year: []
+										  }
+
+							for (var yearVal =1980; yearVal<=2014; yearVal++)
+								{
+								var value = CountryData[yearVal];
+								
+									// deal with missing data points
+									if (value === '--') {
+										value = 0;
+									}
+									else if (value === 'NA') {
+										value = 0;
+									}
+									else if (value === '(s)') {
+										value = 0;
+									}
+									else if (value === 'W') {
+										value = 0;
+									}
+									
+									country.EnergyValue.push(value);
+									country.Year.push(yearVal);
+								}
+							
+								Energy.PetroleumConsumption[country.Name]=country;
+						}
+						PPFlag++;
+						Papa.parse('Data/petroleum_production.csv',
+						{
+							download: true,
+							header: true,
+							dynamicTyping: true,
+							complete: function(PetroleumProductionData){
+							
+							for (var row=0; row < PetroleumProductionData.data.length; row++)
+							{
+								// Load individual rows in the file
+								var CountryData = PetroleumProductionData.data[row];
+							
+								var country = {
+												Name: CountryData.Locality,
+												EnergyValue:[],
+												Year: []
+											  }
+
+								for (var yearVal =1980; yearVal<=2014; yearVal++)
+									{
+									var value = CountryData[yearVal];
+									
+										// deal with missing data points
+										if (value === '--') {
+											value = 0;
+										}
+										else if (value === 'NA') {
+											value = 0;
+										}
+										else if (value === '(s)') {
+											value = 0;
+										}
+										else if (value === 'W') {
+											value = 0;
+										}
+								
+										country.EnergyValue.push(value);
+										country.Year.push(yearVal);
+									}
+								
+									Energy.PetroleumProduction[country.Name]=country;
+							}
+							PPFlag++;
+							Papa.parse('Data/renewable_biofuel_consumption.csv',
+							{
+								download: true,
+								header: true,
+								dynamicTyping: true,
+								complete: function(RenBioConsumeData){
+								
+								for (var row=0; row < RenBioConsumeData.data.length; row++)
+								{
+									// Load individual rows in the file
+									var CountryData = RenBioConsumeData.data[row];
+								
+									var country = {
+													Name: CountryData.Locality,
+													EnergyValue:[],
+													Year: []
+												  }
+
+									for (var yearVal =2000; yearVal<=2012; yearVal++)
+										{
+										var value = CountryData[yearVal];
+										
+											// deal with missing data points
+											if (value === '--') {
+												value = 0;
+											}
+											else if (value === 'NA') {
+												value = 0;
+											}
+											else if (value === '(s)') {
+												value = 0;
+											}
+											else if (value === 'W') {
+												value = 0;
+											}
+									
+											country.EnergyValue.push(value);
+											country.Year.push(yearVal);
+										}
+									
+										Energy.RenBiofeulConsumption[country.Name]=country;
+								}
+								PPFlag++;
+								Papa.parse('Data/renewable_biofuel_production.csv',
+								{
+									download: true,
+									header: true,
+									dynamicTyping: true,
+									complete: function(RenBioProduceData){
+									
+									for (var row=0; row < RenBioProduceData.data.length; row++)
+									{
+										// Load individual rows in the file
+										var CountryData = RenBioProduceData.data[row];
+									
+										var country = {
+														Name: CountryData.Locality,
+														EnergyValue:[],
+														Year: []
+													  }
+
+										for (var yearVal =2000; yearVal<=2012; yearVal++)
+											{
+											var value = CountryData[yearVal];
+											
+												// deal with missing data points
+												if (value === '--') {
+													value = 0;
+												}
+												else if (value === 'NA') {
+													value = 0;
+												}
+												else if (value === '(s)') {
+													value = 0;
+												}
+												else if (value === 'W') {
+													value = 0;
+												}
+										
+												country.EnergyValue.push(value);
+												country.Year.push(yearVal);
+											}
+										
+											Energy.RenBiofeulProduction[country.Name]=country;
+									}
+									PPFlag++;
+									Papa.parse('Data/renewable_electricity_consumption.csv',
+									{
+										download: true,
+										header: true,
+										dynamicTyping: true,
+										complete: function(RenElecConsumeData){
+										
+										for (var row=0; row < RenElecConsumeData.data.length; row++)
+										{
+											// Load individual rows in the file
+											var CountryData = RenElecConsumeData.data[row];
+										
+											var country = {
+															Name: CountryData.Locality,
+															EnergyValue:[],
+															Year: []
+														  }
+
+											for (var yearVal =1980; yearVal<=2012; yearVal++)
+												{
+												var value = CountryData[yearVal];
+												
+													// deal with missing data points
+													if (value === '--') {
+														value = 0;
+													}
+													else if (value === 'NA') {
+														value = 0;
+													}
+													else if (value === '(s)') {
+														value = 0;
+													}
+													else if (value === 'W') {
+														value = 0;
+													}
+											
+													country.EnergyValue.push(value);
+													country.Year.push(yearVal);
+												}
+											
+												Energy.RenElectricityConsumption[country.Name]=country;
+										}
+										PPFlag++;
+										Papa.parse('Data/renewable_electricity_generation.csv',
+										{
+											download: true,
+											header: true,
+											dynamicTyping: true,
+											complete: function(RenElecProduceData){
+											
+											for (var row=0; row < RenElecProduceData.data.length; row++)
+											{
+												// Load individual rows in the file
+												var CountryData = RenElecProduceData.data[row];
+											
+												var country = {
+																Name: CountryData.Locality,
+																EnergyValue:[],
+																Year: []
+															  }
+
+												for (var yearVal =1980; yearVal<=2012; yearVal++)
+													{
+													var value = CountryData[yearVal];
+													
+														// deal with missing data points
+														if (value === '--') {
+															value = 0;
+														}
+														else if (value === 'NA') {
+															value = 0;
+														}
+														else if (value === '(s)') {
+															value = 0;
+														}
+														else if (value === 'W') {
+															value = 0;
+														}
+												
+														country.EnergyValue.push(value);
+														country.Year.push(yearVal);
+													}
+												
+													Energy.RenElectricityProduction[country.Name]=country;
+											}
+											PPFlag++;
+											Papa.parse('Data/total_electricity_consumption.csv',
+											{
+												download: true,
+												header: true,
+												dynamicTyping: true,
+												complete: function(TotElecConsumeData){
+												
+												for (var row=0; row < TotElecConsumeData.data.length; row++)
+												{
+													// Load individual rows in the file
+													var CountryData = TotElecConsumeData.data[row];
+												
+													var country = {
+																	Name: CountryData.Locality,
+																	EnergyValue:[],
+																	Year: []
+																  }
+
+													for (var yearVal =1980; yearVal<=2012; yearVal++)
+														{
+														var value = CountryData[yearVal];
+														
+															// deal with missing data points
+															if (value === '--') {
+																value = 0;
+															}
+															else if (value === 'NA') {
+																value = 0;
+															}
+															else if (value === '(s)') {
+																value = 0;
+															}
+															else if (value === 'W') {
+																value = 0;
+															}
+													
+															country.EnergyValue.push(value);
+															country.Year.push(yearVal);
+														}
+													
+														Energy.TotElectricityConsumption[country.Name]=country;
+												}
+												PPFlag++;
+												Papa.parse('Data/total_electricity_generation.csv',
+												{
+													download: true,
+													header: true,
+													dynamicTyping: true,
+													complete: function(TotElecProduceData){
+													
+													for (var row=0; row < TotElecProduceData.data.length; row++)
+													{
+														// Load individual rows in the file
+														var CountryData = TotElecProduceData.data[row];
+													
+														var country = {
+																		Name: CountryData.Locality,
+																		EnergyValue:[],
+																		Year: []
+																	  }
+
+														for (var yearVal =1980; yearVal<=2012; yearVal++)
+															{
+															var value = CountryData[yearVal];
+															
+																// deal with missing data points
+																if (value === '--') {
+																	value = 0;
+																}
+																else if (value === 'NA') {
+																	value = 0;
+																}
+																else if (value === '(s)') {
+																	value = 0;
+																}
+																else if (value === 'W') {
+																	value = 0;
+																}
+														
+																country.EnergyValue.push(value);
+																country.Year.push(yearVal);
+															}
+														
+															Energy.TotElectricityProduction[country.Name]=country;
+													}
+													PPFlag++;
+													Papa.parse('Data/total_primary_energy_consumption.csv',
+													{
+														download: true,
+														header: true,
+														dynamicTyping: true,
+														complete: function(PrimaryEnergyConsumeData){
+														
+														for (var row=0; row < PrimaryEnergyConsumeData.data.length; row++)
+														{
+															// Load individual rows in the file
+															var CountryData = PrimaryEnergyConsumeData.data[row];
+														
+															var country = {
+																			Name: CountryData.Locality,
+																			EnergyValue:[],
+																			Year: []
+																		  }
+
+															for (var yearVal =1980; yearVal<=2012; yearVal++)
+																{
+																var value = CountryData[yearVal];
+																
+																	// deal with missing data points
+																	if (value === '--') {
+																		value = 0;
+																	}
+																	else if (value === 'NA') {
+																		value = 0;
+																	}
+																	else if (value === '(s)') {
+																		value = 0;
+																	}
+																	else if (value === 'W') {
+																		value = 0;
+																	}
+															
+																	country.EnergyValue.push(value);
+																	country.Year.push(yearVal);
+																}
+															
+																Energy.PrimaryEnergyConsumption[country.Name]=country;
+														}
+														PPFlag++;
+														Papa.parse('Data/total_primary_energy_production.csv',
+														{
+															download: true,
+															header: true,
+															dynamicTyping: true,
+															complete: function(PrimaryEnergyProduceData){
+															
+															for (var row=0; row < PrimaryEnergyProduceData.data.length; row++)
+															{
+																// Load individual rows in the file
+																var CountryData = PrimaryEnergyProduceData.data[row];
+															
+																var country = {
+																				Name: CountryData.Locality,
+																				EnergyValue:[],
+																				Year: []
+																			  }
+
+																for (var yearVal =1980; yearVal<=2012; yearVal++)
+																	{
+																	var value = CountryData[yearVal];
+																	
+																		// deal with missing data points
+																		if (value === '--') {
+																			value = 0;
+																		}
+																		else if (value === 'NA') {
+																			value = 0;
+																		}
+																		else if (value === '(s)') {
+																			value = 0;
+																		}
+																		else if (value === 'W') {
+																			value = 0;
+																		}
+																
+																		country.EnergyValue.push(value);
+																		country.Year.push(yearVal);
+																	}
+																
+																	Energy.PrimaryEnergyProduction[country.Name]=country;
+															}
+															PPFlag++;
+															Papa.parse('Data/co2_emissions_per_capita.csv',
+															{
+																download: true,
+																header: true,
+																dynamicTyping: true,
+																complete: function(CO2EmissionData){
+																
+																for (var row=0; row < CO2EmissionData.data.length; row++)
+																{
+																	// Load individual rows in the file
+																	var CountryData = CO2EmissionData.data[row];
+																
+																	var country = {
+																					Name: CountryData.Locality,
+																					EnergyValue:[],
+																					Year: []
+																				  }
+
+																	for (var yearVal =1980; yearVal<=2011; yearVal++)
+																		{
+																		var value = CountryData[yearVal];
+																		
+																			// deal with missing data points
+																			if (value === '--') {
+																				value = 0;
+																			}
+																			else if (value === 'NA') {
+																				value = 0;
+																			}
+																			else if (value === '(s)') {
+																				value = 0;
+																			}
+																			else if (value === 'W') {
+																				value = 0;
+																			}
+																	
+																			country.EnergyValue.push(value);
+																			country.Year.push(yearVal);
+																		}
+																	
+																		Energy.Co2EmmissionPerCapata[country.Name]=country;
+																}
+																PPFlag++;
+																console.log(PPFlag);
+																Start_Visualization();
+															  }	// end of complete function
+															}); // end of Papa Parse CO2EmissionData
+														  }	// end of complete function
+														}); // end of Papa Parse PrimaryEnergy_production
+													  }	// end of complete function
+													}); // end of Papa Parse PrimaryEnergy_consumption
+												  }	// end of complete function
+												}); // end of Papa Parse Total_electricity_generation
+											  }	// end of complete function
+											}); // end of Papa Parse Total_electricity_consumption
+										  }	// end of complete function
+										}); // end of Papa Parse RenElectricity_production
+									  }	// end of complete function
+									}); // end of Papa Parse RenElectricity_Consumption
+								  }	// end of complete function
+								}); // end of Papa Parse BioFeul_production
+							  }	// end of complete function
+							}); // end of Papa Parse BioFeul_Consumption
+						  }	// end of complete function
+						}); // end of Papa Parse petroleum_production
+					  }	// end of complete function
+					}); // end of Papa Parse petroleum_consumption
+				  } // end of complete function
+				});// end of Papa Parse coal_production
+			}	//end of complete function 
+		});	// end of Papa Parse coal_consumption
+		
+		function Start_Visualization()
+		{		//while(PPFlag!=13);
+				//(PPFlag!=1);
+				//draw bar chart
+				//drawBarChartCountry_Energy(country);
+				
+				//draw line chart
+				//drawLineChartCountry_Energy(country);
+				var SelectedEnergy=0;
+				var SelectedCountry=0;
+				var chartWidth = 1000;
+				var flag=0;
+				var SelectedEnergies=[];
+				var Eflag=0;
+				var SelectedYear=0;
+									
+				// populate selection list for countries
+				d3.select('#selectionWidgetCountry').selectAll('option').data(ListOfCountries).enter().append('option')
+					.html(function(d) { return d; })
+					.attr('value', function(d) { return d; })
+				
+				// populate selection list for Years
+				d3.select('#selectionWidgetYear').selectAll('option').data(ListOfYears).enter().append('option')
+					.html(function(d) { return d; })
+					.attr('value', function(d) { return d; })
+					
+				d3.select('#selectionWidgetEnergy').selectAll('option').data(EnergyList1).enter().append('option')
+					.html(function(d) { return d; })
+					.attr('value', function(d) { return d; })
+					
+				d3.select('#selectionWidgetEnergyS').selectAll('option').data(EnergyList2).enter().append('option')
+					.html(function(d) { return d; })
+					.attr('value', function(d) { return d; })
+		
+				var CNames = d3.select("#mainSVG");
+				var ENames = d3.select("#mainSVG");
+				
+				// for selecting types of energies
+				d3.select("#selectionWidgetEnergy")
+					.on('change', function() {
+					
+						// clear the contents of the chart
+						d3.select("#mainSVG").selectAll('g').remove();
+						
+
+						// figure out the newly selected locality
+						var selection = document.getElementById('selectionWidgetEnergy');
+						SelectedEnergy= selection.options[selection.selectedIndex].value;
+						
+				});	
+				
+				console.log('Energy Selected: ' + SelectedEnergy);
+				d3.select("#AddEnergy").on("click",function()
+				{
+					flag++;
+					var selection = document.getElementById('selectionWidgetEnergy');
+					SelectedEnergy = selection.options[selection.selectedIndex].value;
+					SelectedEnergies.push(SelectedEnergy);
+					console.log(SelectedEnergies);
+					
+					ENames.append("text")
+							 .attr("x", 170)
+							 .attr("y", 250 + (15*flag))
+							 .attr("dy", ".35em")
+							 .style("text-anchor", "end")
+							 .text(SelectedEnergy);
+
+				});
+							
+				d3.select("#ClearEnergy").on("click",function()
+				{
+					var elen = SelectedEnergies.length;
+					for(var j=0;j<elen;j++)
+					{
+						MultipleDataSet[j]=0;
+						SelectedEnergies.pop();
+						ENames.select("text").remove();
+					}
+					flag=0;
+					
+				});
+								
+					
+				d3.select("#selectionWidgetEnergyS")
+				.on('change', function() {
+				
+					// clear the contents of the chart
+					d3.select("#mainSVG").selectAll('g').remove();
+					var elen = SelectedEnergies.length;
+
+
+					// figure out the newly selected locality
+					var selection = document.getElementById('selectionWidgetEnergyS');
+					SelectedEnergy= selection.options[selection.selectedIndex].value;
+					
+				
+					console.log('Energy Selected: ' + SelectedEnergy);
+				});
+					
+					d3.select("#AddEnergyS").on("click",function()
+					{
+						flag++;
+						var selection = document.getElementById('selectionWidgetEnergyS');
+						SelectedEnergy = selection.options[selection.selectedIndex].value;
+						SelectedEnergies.push(SelectedEnergy);
+						console.log(SelectedEnergies);
+						
+						//var CNames = d3.select("#mainSVG")
+									ENames.append("text")
+										 .attr("x", 950)
+										 .attr("y", 200 + (15*flag))
+										 .attr("dy", ".35em")
+										 .style("text-anchor", "end")
+										 .text(SelectedEnergy);
+
+					});
+								
+					d3.select("#ClearEnergyS").on("click",function()
+					{
+
+						var elen = SelectedEnergies.length;
+						for(var j=0;j<elen;j++)
+						{
+							MultipleDataSet[j]=0;
+							SelectedEnergies.pop();
+							ENames.select("text").remove();
+						}
+						flag=0;
+						
+					});
+						
+					
+						// for selecting countries
+					d3.select("#selectionWidgetCountry")
+							.on('change', function() {
+
+								// clear the contents of the chart
+							d3.select("#mainSVG").selectAll('g').remove();
+
+								// figure out the newly selected locality
+								var selection = document.getElementById('selectionWidgetCountry');
+								SelectedCountry = selection.options[selection.selectedIndex].value;
+
+								console.log('Country Selected: ' + SelectedCountry);
+						});
+								
+					d3.select("#AddCountry").on("click",function()
+					{
+						flag++;
+						var selection = document.getElementById('selectionWidgetCountry');
+						SelectedCountry = selection.options[selection.selectedIndex].value;
+						SelectedCountries.push(SelectedCountry);
+						console.log(SelectedCountries);
+						
+						//var CNames = d3.select("#mainSVG")
+									CNames.append("text")
+										 .attr("x", 700)
+										 .attr("y", 250 + (15*flag))
+										 .attr("dy", ".35em")
+										 .style("text-anchor", "end")
+										 .text(SelectedCountry);
+
+					});
+								
+					d3.select("#ClearCountry").on("click",function()
+					{
+						var elen = SelectedCountries.length;
+						for(var j=0;j<elen;j++)
+						{
+							MultipleDataSet[j]=0;
+							SelectedCountries.pop();
+							CNames.select("text").remove();
+						}
+						flag=0;
+						
+					});
+
+									
+						
+					d3.select("#BarCButton").on("click", function()
+					{
+						d3.select("#mainSVG").selectAll('g').remove(); 
+						if(SelectedEnergies.length<2)
+						{
+							if(SelectedCountries.length<2)
+							{
+								drawBarChartCountry_Energy(SelectedCountry,SelectedEnergy);
+							}
+							else
+							{
+								drawBarChartMultipleCountry(SelectedCountries,SelectedEnergy);
+							}
+						}else
+						{
+							drawBarChartMultipleEnergy(SelectedCountry,SelectedEnergies);
+						}
+						
+					});
+					
+					d3.select("#LineCButton").on("click", function()
+					{
+						d3.select("#mainSVG").selectAll('g').remove(); 
+						if(SelectedEnergies.length<2)
+						{
+							if(SelectedCountries.length<2)
+							{
+								drawLineChartCountry_Energy(SelectedCountry,SelectedEnergy);
+							}
+							else
+							{						
+								drawLineChartMultipleCountry(SelectedCountries,SelectedEnergy);
+							}
+						}else
+						{
+							drawLineChartMultipleEnergy(SelectedCountry,SelectedEnergies);
+						}
+					}); 
+					d3.select("#selectionWidgetYear")
+						.on('change', function() {
+						
+							// clear the contents of the chart
+							d3.select("#mainSVG").selectAll('g').remove();
+
+							// figure out the newly selected locality
+							var selection = document.getElementById('selectionWidgetYear');
+							SelectedYear= selection.options[selection.selectedIndex].value;
+
+							console.log('Year Selected: ' + SelectedYear);
+							
+						});
+					
+					d3.select("#ScatterPlot").on("click", function(){
+						if(SelectedEnergies.length<2)
+						{
+
+							SelectedEnergies.push(SelectedEnergy);
+							DrawScatterPlotYearWise(SelectedEnergies,SelectedYear);
+						}
+						else
+						{
+							DrawScatterPlotYearWise(SelectedEnergies,SelectedYear);
+						}
+						
+					});
+					
+										
+			}
+	
+				function GetDataset(SelectedCountry,SelectedEnergy)
+				{
+					dataset=0;
+					
+					if(SelectedEnergy == 'CoalConsumption')
+					{
+						
+						dataset = Energy.CoalConsumption[SelectedCountry].EnergyValue;
+						YearStart = Energy.CoalConsumption[SelectedCountry].Year[0];
+						var len = dataset.length;
+						YearEnd = Energy.CoalConsumption[SelectedCountry].Year[len-1];
+				
+						
+					}else if(SelectedEnergy == 'CoalProduction')
+					{
+						dataset = Energy.CoalProduction[SelectedCountry].EnergyValue;
+						YearStart = Energy.CoalProduction[SelectedCountry].Year[0];
+						var len = dataset.length;
+						YearEnd = Energy.CoalProduction[SelectedCountry].Year[len-1];
+					}else if(SelectedEnergy == 'PetroleumConsumption')
+					{
+						dataset = Energy.PetroleumConsumption[SelectedCountry].EnergyValue;
+						YearStart = Energy.PetroleumConsumption[SelectedCountry].Year[0];
+						var len = dataset.length;
+						YearEnd = Energy.PetroleumConsumption[SelectedCountry].Year[len-1];
+					}else if(SelectedEnergy == 'PetroleumProduction')
+					{
+						dataset = Energy.PetroleumProduction[SelectedCountry].EnergyValue;
+						YearStart = Energy.PetroleumProduction[SelectedCountry].Year[0];
+						var len = dataset.length;
+						YearEnd = Energy.PetroleumProduction[SelectedCountry].Year[len-1];
+					}else if(SelectedEnergy == 'RenBiofeulConsumption')
+					{
+						dataset = Energy.RenBiofeulConsumption[SelectedCountry].EnergyValue;
+						YearStart = Energy.RenBiofeulConsumption[SelectedCountry].Year[0];
+						var len = dataset.length;
+						YearEnd = Energy.RenBiofeulConsumption[SelectedCountry].Year[len-1];
+					}else if(SelectedEnergy == 'RenBiofeulProduction')
+					{
+						dataset = Energy.RenBiofeulProduction[SelectedCountry].EnergyValue;
+						YearStart = Energy.RenBiofeulProduction[SelectedCountry].Year[0];
+						var len = dataset.length;
+						YearEnd = Energy.RenBiofeulProduction[SelectedCountry].Year[len-1];
+					}else if(SelectedEnergy == 'RenElectricityConsumption')
+					{
+						dataset = Energy.RenElectricityConsumption[SelectedCountry].EnergyValue;
+						YearStart = Energy.RenElectricityConsumption[SelectedCountry].Year[0];
+						var len = dataset.length;
+						YearEnd = Energy.RenElectricityConsumption[SelectedCountry].Year[len-1];
+					}else if(SelectedEnergy == 'RenElectricityProduction')
+					{
+						dataset = Energy.RenElectricityProduction[SelectedCountry].EnergyValue;
+						YearStart = Energy.RenElectricityProduction[SelectedCountry].Year[0];
+						var len = dataset.length;
+						YearEnd = Energy.RenElectricityProduction[SelectedCountry].Year[len-1];
+					}else if(SelectedEnergy == 'TotElectricityConsumption')
+					{
+						dataset = Energy.TotElectricityConsumption[SelectedCountry].EnergyValue;
+						YearStart = Energy.TotElectricityConsumption[SelectedCountry].Year[0];
+						var len = dataset.length;
+						YearEnd = Energy.TotElectricityConsumption[SelectedCountry].Year[len-1];
+					}else if(SelectedEnergy == 'TotElectricityProduction')
+					{
+						dataset = Energy.TotElectricityProduction[SelectedCountry].EnergyValue;
+						YearStart = Energy.TotElectricityProduction[SelectedCountry].Year[0];
+						var len = dataset.length;
+						YearEnd = Energy.TotElectricityProduction[SelectedCountry].Year[len-1];
+					}else if(SelectedEnergy == 'PrimaryEnergyConsumption')
+					{
+						dataset = Energy.PrimaryEnergyConsumption[SelectedCountry].EnergyValue;
+						YearStart = Energy.PrimaryEnergyConsumption[SelectedCountry].Year[0];
+						var len = dataset.length;
+						YearEnd = Energy.PrimaryEnergyConsumption[SelectedCountry].Year[len-1];
+					}else if(SelectedEnergy == 'PrimaryEnergyProduction')
+					{
+						dataset = Energy.PrimaryEnergyProduction[SelectedCountry].EnergyValue;
+						YearStart = Energy.PrimaryEnergyProduction[SelectedCountry].Year[0];
+						var len = dataset.length;
+						YearEnd = Energy.PrimaryEnergyProduction[SelectedCountry].Year[len-1];
+					}else if(SelectedEnergy == 'Co2EmmissionPerCapata')
+					{	
+						dataset = Energy.Co2EmmissionPerCapata[SelectedCountry].EnergyValue;
+						YearStart = Energy.Co2EmmissionPerCapata[SelectedCountry].Year[0];
+						var len = dataset.length;
+						YearEnd = Energy.Co2EmmissionPerCapata[SelectedCountry].Year[len-1];
+					}
+				}
+
+
+				function GetScatterDataset(SelectedEnergy,SelectedYear,ScatterDataset)
+				{
+					//ScatterDataset=0;
+					var Countrylen = ScatterPlotCountries.length;
+					console.log(SelectedYear);
+					
+					if(SelectedEnergy == 'Coal')
+					{
+						
+						for(var i=0;i<Countrylen;i++)
+						{
+							var SelCountry = ScatterPlotCountries[i];
+							//console.log()
+						
+							var StartY = Energy.CoalProduction[SelCountry].Year[0];
+							if(SelectedYear<StartY)
+							{
+								ScatterDataset.push({x:0,
+													 y:0
+													});
+							}else
+							{
+								ScatterDataset.push({x:Energy.CoalConsumption[SelCountry].EnergyValue[SelectedYear-StartY],
+												     y:Energy.CoalProduction[SelCountry].EnergyValue[SelectedYear-StartY]
+												 });
+							}
+
+						}
+					}
+					else if(SelectedEnergy == 'Petroleum')
+					{
+						
+						for(var i=0;i<Countrylen;i++)
+						{
+							var SelCountry = ScatterPlotCountries[i];
+							//console.log()
+						
+							var StartY = Energy.PetroleumConsumption[SelCountry].Year[0];
+							if(SelectedYear<StartY)
+							{
+								ScatterDataset.push({x:0,
+													 y:0
+													});
+							}else
+							{
+								ScatterDataset.push({x:Energy.PetroleumConsumption[SelCountry].EnergyValue[SelectedYear-StartY],
+												     y:Energy.PetroleumProduction[SelCountry].EnergyValue[SelectedYear-StartY]
+												 });
+							}
+
+						}
+					} 
+					else if(SelectedEnergy == 'Renewable BioFeul')
+					{
+						
+						for(var i=0;i<Countrylen;i++)
+						{
+							var SelCountry = ScatterPlotCountries[i];
+							//console.log()
+						
+							var StartY = Energy.RenBiofeulConsumption[SelCountry].Year[0];
+							if(SelectedYear<StartY)
+							{
+								ScatterDataset.push({x:0,
+													 y:0
+													});
+							}else
+							{
+								ScatterDataset.push({x:Energy.RenBiofeulConsumption[SelCountry].EnergyValue[SelectedYear-StartY],
+												     y:Energy.RenBiofeulProduction[SelCountry].EnergyValue[SelectedYear-StartY]
+												 });
+							}
+
+						}
+					}
+					else if(SelectedEnergy == 'Renewable Electricity')
+					{
+						
+						for(var i=0;i<Countrylen;i++)
+						{
+							var SelCountry = ScatterPlotCountries[i];
+							//console.log()
+						
+							var StartY = Energy.RenElectricityConsumption[SelCountry].Year[0];
+							if(SelectedYear<StartY)
+							{
+								ScatterDataset.push({x:0,
+													 y:0
+													});
+							}else
+							{
+								ScatterDataset.push({x:Energy.RenElectricityConsumption[SelCountry].EnergyValue[SelectedYear-StartY],
+												     y:Energy.RenElectricityProduction[SelCountry].EnergyValue[SelectedYear-StartY]
+												 });
+							}
+
+						}
+					}
+					else if(SelectedEnergy == 'Total Electricity')
+					{
+						
+						for(var i=0;i<Countrylen;i++)
+						{
+							var SelCountry = ScatterPlotCountries[i];
+							//console.log()
+						
+							var StartY = Energy.TotElectricityConsumption[SelCountry].Year[0];
+							if(SelectedYear<StartY)
+							{
+								ScatterDataset.push({x:0,
+													 y:0
+													});
+							}else
+							{
+								ScatterDataset.push({x:Energy.TotElectricityConsumption[SelCountry].EnergyValue[SelectedYear-StartY],
+												     y:Energy.TotElectricityProduction[SelCountry].EnergyValue[SelectedYear-StartY]
+												 });
+							}
+
+						}
+					} 
+					else if(SelectedEnergy == 'Primary Energy')
+					{
+						
+						for(var i=0;i<Countrylen;i++)
+						{
+							var SelCountry = ScatterPlotCountries[i];
+							//console.log()
+						
+							var StartY = Energy.PrimaryEnergyConsumption[SelCountry].Year[0];
+							if(SelectedYear<StartY)
+							{
+								ScatterDataset.push({x:0,
+													 y:0
+													});
+							}else
+							{
+								ScatterDataset.push({x:Energy.PrimaryEnergyConsumption[SelCountry].EnergyValue[SelectedYear-StartY],
+												     y:Energy.PrimaryEnergyProduction[SelCountry].EnergyValue[SelectedYear-StartY]
+												 });
+							}
+
+						}
+					}
+					if(SelectedEnergy == 'Co2Emission Per Capita')
+					{
+						
+						for(var i=0;i<Countrylen;i++)
+						{
+							var SelCountry = ScatterPlotCountries[i];
+							//console.log()
+						
+							var StartY = Energy.Co2EmmissionPerCapata[SelCountry].Year[0];
+							if(SelectedYear<StartY)
+							{
+								ScatterDataset.push({x:0,
+													 y:0
+													});
+							}else
+							{
+								ScatterDataset.push({x:Energy.Co2EmmissionPerCapata[SelCountry].EnergyValue[SelectedYear-StartY],
+												     y:1
+												 });
+							}
+
+						}
+					}
+				}				
+				function drawBarChartMultipleCountry(SelectedCountries,SelectedEnergy)
+				{
+					//define chart width and height
+					var chartWidth = 1000;
+					var chartHeight = 360;
+					var MaxValueList = [];
+					var GoupDataset = [];
+					
+					console.log(SelectedEnergy);
+					//initialize dataset variable
+					
+					var len = SelectedCountries.length;
+					if (len >4)
+					{
+						len = 4;
+					}
+					for(var i=0;i<len;i++)
+					{
+						GetDataset(SelectedCountries[i],SelectedEnergy);
+						MultipleDataSet[i]=dataset;
+						MaxValueList.push(d3.max(dataset));
+					}
+					console.log(MultipleDataSet);
+					console.log(MaxValueList);
+					
+					// width of individual bars
+					var barWidth = (chartWidth)/((YearEnd-YearStart+1)*(len+1));
+					var index;
+					var val=0;
+					//console.log(country.Year);
+					//console.log(country.Consumption);
+					for(var j=0;j<(YearEnd-YearStart+1);j++)
+					{
+						for(index=0;index<len;index++)
+						{
+							GoupDataset[val]=MultipleDataSet[index][j];
+							val++;
+							
+						}
+						GoupDataset[val]=0;
+						val++;
+					}
+					console.log(GoupDataset);										
+					// find maximum values 
+					var MaxValue = d3.max(MaxValueList);
+					console.log(MaxValue);
+										
+					var scaleX = d3.scale.linear()
+							      .range([0, chartWidth])
+								  .domain([YearStart, YearEnd]);
+
+					var scaleY = d3.scale.linear()
+								.domain([0, MaxValue])
+								.range([chartHeight,0]);
+
+					var color = d3.scale.ordinal()
+								.range(["#d0743c", "#ff8c00"]);//,"#98abc5", "#8a89a6", "#7b6888"]);
+
+					var xAxis = d3.svg.axis()
+								.scale(scaleX)
+								.orient("bottom")
+								.tickFormat(d3.format("d"));;
+
+					var yAxis = d3.svg.axis()
+								.scale(scaleY)
+								.orient("left")
+								.tickFormat(d3.format(".1s"));
+					
+					d3.select("#mainSVG").select("text").remove();
+					// select chart
+					var svg = d3.select("#mainSVG")
+								.append("g")
+								.attr("transform", "translate(400, 400)");
+
+					svg.append("g")
+					   .attr('class','axis')
+					   .attr('transform', 'translate(0,' + chartHeight + ')')
+					   .call(xAxis);
+					   
+					// x-label
+					svg.append("text")
+						.attr("transform", "rotate(-90)")
+						.attr("y", chartHeight - 450)
+						.attr("x",-200)
+						.attr("dy", "1em")
+						.style("text-anchor", "middle")
+						.style("font-size","20px")
+						.text("Energy Value");
+
+					svg.append("text")
+						.attr("y", 400)
+						.attr("x",400)
+						.attr("dy", "1em")
+						.style("text-anchor", "middle")
+						.style("font-size","20px")
+						.text("Time");
+						
+					svg.append("g")
+					  .attr("class", "axis")
+					  .call(yAxis)
+					  .append("text")
+					  .attr("transform", "rotate(-90)")
+					  .attr("y", 6)
+					  .attr("dy", ".71em")
+					  .style("text-anchor", "end");
+
+					var rectangle = svg.selectAll("rect")
+								.data(GoupDataset)
+								.enter().append("rect");
+
+					rectangle.attr("x", function(d, i){ return (i*barWidth); })
+							.attr("y", function(d, i){ return scaleY(d);})
+							.attr("width", barWidth-2)
+							.attr("height", function(d){return chartHeight-scaleY(d);})
+							.attr("fill", function(d,i) { return color(i); });
+
+				var legend = svg.selectAll(".legend")
+					.data(SelectedCountries.slice().reverse())
+					.enter().append("g")
+					.attr("class", "legend")
+					.attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+				legend.append("rect")
+					  .attr("x", chartWidth - 18)
+					  .attr("width", 18)
+					  .attr("height", 18)
+					  .style("fill", color);
+
+				  legend.append("text")
+					  .attr("x", chartWidth - 24)
+					  .attr("y", 9)
+					  .attr("dy", ".35em")
+					  .style("text-anchor", "end")
+					  .text(function(d) { return d; });
+					
+				}
+				function drawBarChartMultipleEnergy(SelectedCountry,SelectedEnergies)
+				{
+					//define chart width and height
+					var chartWidth = 1000;
+					var chartHeight = 360;
+					var MaxValueList = [];
+					var GoupDataset = [];
+					
+					//initialize dataset variable
+					console.log(SelectedEnergies);
+					var len = SelectedEnergies.length;
+					if (len >4)
+					{
+						len = 4;
+					}
+					for(var i=0;i<len;i++)
+					{
+						GetDataset(SelectedCountry,SelectedEnergies[i]);
+						MultipleDataSet[i]=dataset;
+						MaxValueList.push(d3.max(dataset));
+					}
+					
+					console.log(MultipleDataSet);
+					console.log(MaxValueList);
+					
+					// width of individual bars
+					var barWidth = (chartWidth)/((YearEnd-YearStart+1)*(len+1));
+					var index;
+					var val=0;
+					//console.log(country.Year);
+					//console.log(country.Consumption);
+					for(var j=0;j<(YearEnd-YearStart+1);j++)
+					{
+						for(index=0;index<len;index++)
+						{
+							GoupDataset[val]=MultipleDataSet[index][j];
+							val++;
+							
+						}
+						GoupDataset[val]=0;
+						val++;
+					}
+					console.log(GoupDataset);										
+					// find maximum values 
+					var MaxValue = d3.max(MaxValueList);
+					console.log(MaxValue);
+										
+					var scaleX = d3.scale.linear()
+							      .range([0, chartWidth])
+								  .domain([YearStart, YearEnd]);
+
+					var scaleY = d3.scale.linear()
+								.domain([0, MaxValue])
+								.range([chartHeight,0]);
+
+					var color = d3.scale.ordinal()
+								.range(["#8a89a6", "#7b6888"]);//,"#ff8c00"]);//"#d0743c", ,"#98abc5", 
+					
+					//var color = d3.scale.category20();
+
+					var xAxis = d3.svg.axis()
+								.scale(scaleX)
+								.orient("bottom")
+								.tickFormat(d3.format("d"));;
+
+					var yAxis = d3.svg.axis()
+								.scale(scaleY)
+								.orient("left")
+								.tickFormat(d3.format(".1s"));
+					
+					d3.select("#mainSVG").select("text").remove();
+					// select chart
+					var svg = d3.select("#mainSVG")
+								.append("g")
+								.attr("transform", "translate(400, 400)");
+
+					svg.append("g")
+					   .attr('class','axis')
+					   .attr('transform', 'translate(0,' + chartHeight + ')')
+					   .call(xAxis);
+					   
+					// x-label
+					svg.append("text")
+						.attr("transform", "rotate(-90)")
+						.attr("y", chartHeight - 450)
+						.attr("x",-200)
+						.attr("dy", "1em")
+						.style("text-anchor", "middle")
+						.style("font-size","20px")
+						.text("Energy Value");
+					
+					svg.append("text")
+						.attr("y", 400)
+						.attr("x",400)
+						.attr("dy", "1em")
+						.style("text-anchor", "middle")
+						.style("font-size","20px")
+						.text("Time");
+						
+					svg.append("g")
+					  .attr("class", "axis")
+					  .call(yAxis)
+					  .append("text")
+					  .attr("transform", "rotate(-90)")
+					  .attr("y", 6)
+					  .attr("dy", ".71em")
+					  .style("text-anchor", "end");
+
+					var rectangle = svg.selectAll("rect")
+								.data(GoupDataset)
+								.enter().append("rect");
+
+					rectangle.attr("x", function(d, i){ return (i*barWidth); })
+							.attr("y", function(d, i){ return scaleY(d);})
+							.attr("width", barWidth-2)
+							.attr("height", function(d){return chartHeight-scaleY(d);})
+							.attr("fill", function(d,i) { return color(i); });
+
+				var legend = svg.selectAll(".legend")
+					.data(SelectedEnergies.slice().reverse())
+					.enter().append("g")
+					.attr("class", "legend")
+					.attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+				legend.append("rect")
+					  .attr("x", chartWidth - 18)
+					  .attr("width", 18)
+					  .attr("height", 18)
+					  .style("fill", color);
+
+				  legend.append("text")
+					  .attr("x", chartWidth - 24)
+					  .attr("y", 9)
+					  .attr("dy", ".35em")
+					  .style("text-anchor", "end")
+					  .text(function(d) { return d; });
+					
+				}
+				function drawBarChartCountry_Energy(SelectedCountry,SelectedEnergy)
+				{
+					//define chart width and height
+					var chartWidth = 1000;
+					var chartHeight = 360;
+					
+					console.log(SelectedEnergy);
+					//initialize dataset variable
+					GetDataset(SelectedCountry,SelectedEnergy);
+					
+					// width of individual bars
+					var barWidth = (chartWidth)/(YearEnd-YearStart+1);
+					
+					//console.log(country.Year);
+					//console.log(country.Consumption);
+															
+					// find maximum values 
+					var MaxValue = d3.max(dataset);
+					console.log(MaxValue);
+					
+					//format the y axis values
+					var Yformat = d3.format()
+					
+					//scale the y-axis for plotting data
+					var scaleY = d3.scale.linear()
+								.domain([0, MaxValue])
+								.range([chartHeight,0]);
+					
+					//scale the x-axis for plotting data- for date					
+					/*var scaleX = d3.time.scale()
+								 .domain([new Date(1980,1,1), new Date(2012,1,1)])
+								 .range([0, chartWidth]);*/
+					
+					//scale the x-axis for plotting data- for date					
+					var scaleX = d3.scale.linear()
+								 .domain([YearStart, YearEnd])
+								 .range([0, chartWidth]);
+								 
+					//display date scale on x-axis
+					var XAxis = d3.svg.axis()
+								.scale(scaleX)
+								.orient('bottom')
+								.tickFormat(d3.format("d"));
+					
+					//display date scale on x-axis
+					var YAxis = d3.svg.axis()
+								.scale(scaleY)
+								.orient('left')
+								.tickFormat(d3.format(".1s"));
+					//YAxis.tickFormat(d3.format(""));
+					
+					// select chart
+					var svg = d3.select("#mainSVG")
+								.append("g")
+								.attr("transform", "translate(400, 400)");
+					
+					// plot the x-axis
+					svg.append("g")
+					   .attr('class','axis')
+					   .attr('transform', 'translate(0,' + chartHeight + ')')
+					   .call(XAxis);
+					   
+					// plot the y-axis   
+				    svg.append("g")
+						.attr('class','axis')
+						.attr('transform','translate(-2,0)')
+						.call(YAxis);
+					
+					// x-label
+					svg.append("text")
+						.attr("transform", "rotate(-90)")
+						.attr("y", chartHeight - 450)
+						.attr("x",-200)
+						.attr("dy", "1em")
+						.style("text-anchor", "middle")
+						.style("font-size","20px")
+						.text("Energy Value");
+					
+					svg.append("text")
+						.attr("y", 400)
+						.attr("x",400)
+						.attr("dy", "1em")
+						.style("text-anchor", "middle")
+						.style("font-size","20px")
+						.text("Time");	
+					
+					// plot bars of bard chart
+					var rectangle = svg.selectAll("rect")
+									 .data(dataset)
+									 .enter()
+									 .append("rect");
+									 
+					rectangle.attr("x", function(d, i){ return i*barWidth })
+							.attr("y", function(d, i){ return scaleY(d);})
+							.attr("width", barWidth-2)
+							.attr("height", function(d){return chartHeight-scaleY(d);})
+							.attr("fill", "orange");	
+		
+				}
+				
+				function drawLineChartCountry_Energy(SelectedCountry,SelectedEnergy)
+				{
+					// define chart height and width
+					var chartWidth = 1000;
+					var chartHeight = 360;
+					
+					GetDataset(SelectedCountry,SelectedEnergy);
+					// find maximum values 
+					// find maximum values 
+					var MaxValue = d3.max(dataset);
+					console.log(MaxValue);
+					
+					//format the y axis values
+					//var Yformat = d3.format()
+				
+					var LineDataset = [];
+					var DatasetLen = dataset.length;
+					
+					for(index=0;index<DatasetLen;index++)
+					{
+						var YearVal = YearStart + index;
+						LineDataset.push({x:new Date(YearVal,1,1),
+										  y:dataset[index]});
+					
+					}				
+					console.log(LineDataset);
+					
+					//scale the y-axis for plotting data
+					var scaleY = d3.scale.linear()
+								.domain([0, MaxValue])
+								.range([chartHeight,0]);
+					
+					//scale the x-axis for plotting data- for date					
+					var scaleX = d3.time.scale()
+								 .domain([new Date(YearStart, 1, 1), new Date(YearEnd, 1, 1)])
+								 .range([0, chartWidth]);
+										
+					//display date scale on x-axis
+					var XAxis = d3.svg.axis()
+								.scale(scaleX)
+								.orient('bottom');
+					
+					//display date scale on x-axis
+					var YAxis = d3.svg.axis()
+								.scale(scaleY)
+								.orient('left')
+								.tickFormat(d3.format(".1s"));
+					//YAxis.tickFormat(d3.format(""));
+					
+				
+					// select chart
+					var svg = d3.select("#mainSVG")
+								.append("g")
+								.attr("transform", "translate(400, 400)");
+					
+					// get line information
+					var lineFn = d3.svg.line()
+								 .x(function(d){return scaleX(d.x);})
+								 .y(function(d){return scaleY(d.y);});
+					
+					// plot the x-axis
+					svg.append("g")
+					   .attr('class','axis')
+					   .attr('transform', 'translate(0,' + chartHeight + ')')
+					   .call(XAxis);
+					   
+					// x-label
+					svg.append("text")
+						.attr("transform", "rotate(-90)")
+						.attr("y", chartHeight - 450)
+						.attr("x",-200)
+						.attr("dy", "1em")
+						.style("text-anchor", "middle")
+						.style("font-size","20px")
+						.text("Energy Value");
+					
+					svg.append("text")
+						.attr("y", 400)
+						.attr("x",400)
+						.attr("dy", "1em")
+						.style("text-anchor", "middle")
+						.style("font-size","20px")
+						.text("Time");
+						
+					// plot the y-axis
+				    svg.append("g")
+						.attr('class','axis')
+						.attr('transform','translate(-2,0)')
+						.call(YAxis);
+					var group = svg.append("g");
+					group.append("path")
+						 .style("fill", "none")
+						 .style("stroke", "black")
+						 .style("stroke-width", 2)					
+						.attr("d", lineFn(LineDataset));
+									 
+				}
+				
+				function drawLineChartMultipleEnergy(SelectedCountry,SelectedEnergies)
+				{
+					var chartWidth = 1000;
+					var chartHeight = 360;
+					var MaxValueList = [];
+					var GoupDataset = {};
+					var LineDataset = [];
+					
+					//initialize dataset variable
+					console.log(SelectedEnergies);
+					var len = SelectedEnergies.length;
+					if (len >4)
+					{
+						len = 4;
+					}
+					for(var i=0;i<len;i++)
+					{
+						var LineDataset = [];
+						GetDataset(SelectedCountry,SelectedEnergies[i]);
+						for(index=0;index<(YearEnd-YearStart+1);index++)
+						{
+							var YearVal = YearStart + index;
+							LineDataset.push({x:new Date(YearVal,1,1),
+											  y:dataset[index]});
+							
+						}
+						MaxValueList.push(d3.max(dataset));
+						GoupDataset[i]=LineDataset;
+					}
+					
+					MaxValue = d3.max(MaxValueList);
+					console.log(GoupDataset);
+					
+					//scale the y-axis for plotting data
+					var scaleY = d3.scale.linear()
+								.domain([0, MaxValue])
+								.range([chartHeight,0]);
+					
+					//scale the x-axis for plotting data- for date					
+					var scaleX = d3.time.scale()
+								 .domain([new Date(YearStart, 1, 1), new Date(YearEnd, 1, 1)])
+								 .range([0, chartWidth]);
+										
+					//display date scale on x-axis
+					var XAxis = d3.svg.axis()
+								.scale(scaleX)
+								.orient('bottom');
+					
+					//display date scale on x-axis
+					var YAxis = d3.svg.axis()
+								.scale(scaleY)
+								.orient('left')
+								.tickFormat(d3.format(".1s"));
+					//YAxis.tickFormat(d3.format(""));
+					
+				
+					// select chart
+					var svg = d3.select("#mainSVG")
+								.append("g")
+								.attr("transform", "translate(400, 400)");
+					
+					// get line information
+					var lineFn = d3.svg.line()
+								.interpolate("basis")
+								 .x(function(d){return scaleX(d.x);})
+								 .y(function(d){return scaleY(d.y);});
+								 
+					var color2 = d3.scale.ordinal()
+								.range(["#8a89a6", "#7b6888"]);//"#d0743c", "#ff8c00","#98abc5", 
+					
+					// plot the x-axis
+					svg.append("g")
+					   .attr('class','axis')
+					   .attr('transform', 'translate(0,' + chartHeight + ')')
+					   .call(XAxis);
+					
+					// x-label
+					svg.append("text")
+						.attr("transform", "rotate(-90)")
+						.attr("y", chartHeight - 450)
+						.attr("x",-200)
+						.attr("dy", "1em")
+						.style("text-anchor", "middle")
+						.style("font-size","20px")
+						.text("Energy Value");
+					  
+					// plot the y-axis
+				    svg.append("g")
+						.attr('class','axis')
+						.attr('transform','translate(-2,0)')
+						.call(YAxis);
+					
+					svg.append("text")
+						.attr("y", 400)
+						.attr("x",400)
+						.attr("dy", "1em")
+						.style("text-anchor", "middle")
+						.style("font-size","20px")
+						.text("Time");
+					
+					for(var k=0;k<len;k++)
+					{
+						
+						svg.append("path")
+						 .attr("id","line1")
+						 .style("fill", "none")
+						 .style("stroke", color2)
+						 .style("stroke-width", 3)					
+						.attr("d", lineFn(GoupDataset[k]));
+					}
+									 
+				}
+				function drawLineChartMultipleCountry(SelectedCountries,SelectedEnergy)
+				{
+					var chartWidth = 1000;
+					var chartHeight = 360;
+					var MaxValueList = [];
+					var MultipleDataSet={};
+					
+					//initialize dataset variable
+					console.log(SelectedCountries);
+					var len = SelectedCountries.length;
+					if (len >4)
+					{
+						len = 4;
+					}
+					for(var i=0;i<len;i++)
+					{
+						var LineDataset = [];
+						GetDataset(SelectedCountries[i],SelectedEnergy);
+						for(var j=0;j<(YearEnd-YearStart+1);j++)
+						{
+							var YearVal = YearStart + j;
+							
+							LineDataset.push({x:new Date(YearVal,1,1),
+											  y:dataset[j]});
+							MaxValueList.push(d3.max(dataset));
+
+						}
+						MultipleDataSet[i]=LineDataset;
+					}
+
+					console.log(MultipleDataSet);
+					MaxValue = d3.max(MaxValueList);
+					
+					
+					//scale the y-axis for plotting data
+					var scaleY = d3.scale.linear()
+								.domain([0, MaxValue])
+								.range([chartHeight,0]);
+					
+					//scale the x-axis for plotting data- for date					
+					var scaleX = d3.time.scale()
+								 .domain([new Date(YearStart, 1, 1), new Date(YearEnd, 1, 1)])
+								 .range([0, chartWidth]);
+										
+					//display date scale on x-axis
+					var XAxis = d3.svg.axis()
+								.scale(scaleX)
+								.orient('bottom');
+					
+					//display date scale on x-axis
+					var YAxis = d3.svg.axis()
+								.scale(scaleY)
+								.orient('left');
+					//YAxis.tickFormat(d3.format(""));
+					
+				
+					// select chart
+					var svg = d3.select("#mainSVG")
+								.append("g")
+								.attr("transform", "translate(400, 400)");
+					
+					// get line information
+					var lineFn = d3.svg.line()
+								.interpolate("basis")
+								 .x(function(d){return scaleX(d.x);})
+								 .y(function(d){return scaleY(d.y);});
+								 
+					var color3 = d3.scale.ordinal()
+								.range(["#d0743c", "#ff8c00"]);//"#98abc5", "#8a89a6", "#7b6888"]);
+					
+					// plot the x-axis
+					svg.append("g")
+					   .attr('class','axis')
+					   .attr('transform', 'translate(0,' + chartHeight + ')')
+					   .call(XAxis);
+					  
+					// x-label
+					svg.append("text")
+						.attr("transform", "rotate(-90)")
+						.attr("y", chartHeight - 450)
+						.attr("x",-200)
+						.attr("dy", "1em")
+						.style("text-anchor", "middle")
+						.style("font-size","20px")
+						.text("Energy Value");
+						
+					// plot the y-axis
+				    svg.append("g")
+						.attr('class','axis')
+						.attr('transform','translate(-2,0)')
+						.call(YAxis);
+						
+					svg.append("text")
+						.attr("y", 400)
+						.attr("x",400)
+						.attr("dy", "1em")
+						.style("text-anchor", "middle")
+						.style("font-size","20px")
+						.text("Time");
+					
+					
+					for(var k=0;k<len;k++)
+					{
+						
+						svg.append("path")
+						 .attr("id","line1")
+						 .style("fill", "none")
+						 .style("stroke", color3)
+						 .style("stroke-width", 3)					
+						.attr("d", lineFn(MultipleDataSet[k]));
+					}
+				}
+				
+				function DrawScatterPlotYearWise(SelectedEnergies,SelectedYear)
+				{
+					var chartWidth = 1000;
+					var chartHeight = 360;
+					var MaxValueList = [];
+					var GoupDataset = {};
+					
+
+					//initialize dataset variable
+					//console.log(SelectedEnergy1);
+					//console.log(SelectedCountry);
+					var len = SelectedEnergies.length;
+					//var len = 1;
+	
+					for(var i=0;i<len;i++)
+					{
+						var ScatterDataset = [];
+	
+						GetScatterDataset(SelectedEnergies[i],SelectedYear,ScatterDataset)
+						
+						GoupDataset[i]=ScatterDataset;
+						MaxValueList.push(d3.max(ScatterDataset));
+					}
+					
+					MaxValue = d3.max(MaxValueList);
+					console.log(GoupDataset);
+					console.log(MaxValue);	
+					
+					//scale the y-axis for plotting for consumption
+					var scaleY = d3.scale.linear()
+								.domain([0, MaxValue.y])
+								.range([chartHeight,0]);
+					
+					//scale the x-axis for plotting for production				
+					var scaleX = d3.scale.linear()
+								 .domain([0,MaxValue.x])
+								 .range([0, chartWidth]);
+								 
+					var scaleVal = d3.scale.linear()
+								   .domain([0,MaxValue])	
+								   .range([3,5]);
+					
+									
+					//display date scale on x-axis
+					var XAxis = d3.svg.axis()
+								.scale(scaleX)
+								.orient('bottom');
+					
+					//display date scale on x-axis
+					var YAxis = d3.svg.axis()
+								.scale(scaleY)
+								.orient('left');
+					//YAxis.tickFormat(d3.format(""));
+					
+				
+					// select chart
+					var svg = d3.select("#mainSVG")
+								.append("g")
+								.attr("transform", "translate(400, 400)");
+					
+											 
+					var color4 = d3.scale.ordinal()
+								.range(["#d0743c", "#ff8c00","#98abc5", "#8a89a6", "#7b6888"]);
+					
+					// plot the x-axis
+					svg.append("g")
+					   .attr('class','axis')
+					   .attr('transform', 'translate(0,' + chartHeight + ')')
+					   .call(XAxis);
+					   
+					svg.append("text")
+						.attr("transform", "rotate(-90)")
+						.attr("y", chartHeight - 450)
+						.attr("x",-200)
+						.attr("dy", "1em")
+						.style("text-anchor", "middle")
+						.style("font-size","20px")
+						.text("Consumption");
+					  
+					// plot the y-axis
+				    svg.append("g")
+						.attr('class','axis')
+						.attr('transform','translate(-2,0)')
+						.call(YAxis);
+						
+					svg.append("text")
+						.attr("y", 400)
+						.attr("x",400)
+						.attr("dy", "1em")
+						.style("text-anchor", "middle")
+						.style("font-size","20px")
+						.text("Production");
+					
+					for(var k=0;k<len;k++)
+					{
+						svg.selectAll("circle")
+							   .data(GoupDataset[k])
+							   .enter()
+							   .append("circle")
+							   .attr("cx",function(d){return scaleX(d.x);})
+							   .attr("cy",function(d){return scaleY(d.y);})
+							   .attr("r", 3)//function(d){return Math.sqrt(scaleVal(d.y));})
+							   .attr("fill",d3.rgb(255,70+k,25+k));
+					}
+				
+				}
+								
+	</script>
     </body>
 </html>

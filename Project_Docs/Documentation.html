@@ -1,0 +1,147 @@
+﻿	<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Visualization Documentation</title>
+		<script type="text/javascript" src="../d3/d3.js"></script>
+		<style type = "text/css">
+			.heading1
+			{
+			    font-family:    Arial, Helvetica, sans-serif;
+                font-size:      40px;
+                font-weight:    bold;
+				color:		   steel-blue;
+			}
+			.heading2
+			{
+				font-family:    Arial, Helvetica, sans-serif;
+                font-size:      25px;
+                font-weight:    bold;
+				color:			greyg	;
+			
+			}
+			.text
+			{
+				font-family:    Arial, Helvetica, sans-serif;
+                font-size:      18px;
+                font-weight:    bold;
+				color:			black;
+			
+			}
+		</style>
+    </head>
+    <body>
+        <script type="text/javascript">
+            // Your beautiful D3 code will go here
+        </script>
+		<h1 class = "heading1">
+		US Energy Information Administration Data Visualization Document
+		</h1>
+		<h2 class = "heading2">
+			Introduction
+		</h2>
+		<p class = "text"> 
+		This webpage is used to visualize the data provided by US Energy Information Administration of the various countries in the world over the course of 33 years. 
+		This page has been developed as part of the individual project for Data visualization course INFO-H590 at IU School of Informatics and Computing.
+		</p>
+		<p class = "text">
+		The Salient features of the visualization are:
+		</p
+		<ol>
+			<li class = "text">One can view trends in production and consumption of any energy of any country over time.</li>
+			<img src="BarChart_1.png" alt="Bar Chart 1" width="800" height="500" style="left: 450px; top: 10px">
+			<li class = "text">One can view any energy production or consumption, for any country , using a drop down menu</li>
+			<img src="Select_from_drop_down_Country.png" alt="Drop Down" width="1000" height="200" style="left: 450px; top: 10px">
+			<li class = "text">One can chose between the bar chart and line chart for data visualization.</li>
+			<img src="LineChart_1.png" alt="LineChart" width="1000" height="500" style="left: 450px; top: 10px">
+			<li class = "text">One can chose to view multiple countries in form of line-chart or bar-chart, and compare the two or more energy trends for any country</li>
+			<img src="BarChart_MultipleCountries.png" alt="BarChart_MultipleCountries" width="1000" height="500" style="left: 450px; top: 100px"> 
+			<img src="Line_Chart_Multiple_Country.png" alt="Line_Chart_Multiple_Country" width="1000" height="500" style="right: 450px; top: 10px">
+			<li class = "text">One can also chose to view multiple energies in form of line-chart or bar-chart, and compare the energy trends for two or more countries</li>
+			<img src="BarChart_MultipleEnergies.png" alt="BarChart_MultipleEnergies" width="1000" height="500" style="left: 450px; top: 100px"> 
+			
+			<li class = "text">The charts are labeled for convenience.</li>
+			<li class = "text">The scatter pot is used to describe the trend in energies for all countries for a given year. 
+							It can be used for displaying how the energy is being consumed and produced and effecting other variables.</li>
+			<img src="Scatter_plot.png" alt="scatterplot" width="1000" height="500" style="left: 450px; top: 100px"> 
+			<li class = "text">One can choose more than one energy type and view the combined scatter plot.</li>
+			<li class = "text">The visualization is simple to keep away distractions.</li>
+		</ol>
+		<h2 class = "heading2">
+			Design Process
+		</h2>
+		<p class = "text">
+		Since the data was huge and the scope of development was immense, 
+		I felt the safest strategy would be to develop from bottom to top. 
+		What this means is to start developing basic plots with only 1 variable plotted against time. 
+		And start building over it. I began by plotting one type of energy against time for one country. 
+		Once both bar charts and line charts were complete, then I picked more countries and started plotting them in comparison to one another. 
+		After several countries, it turned out that the data got too cluttered to make sense of, 
+		and I found logical to a put a restriction on how many countries can be plotted on bar and line charts. 
+		Hence, one can view maximum of four countries to compare against one another.
+		The next step was to plot two or more energies for a single country. The same maximum limit for four energies is applied herr
+		to reduce clutter.
+		
+		</p>
+		
+		<p class = "text">
+		Once the ground work was laid, the next task was of designing the layout of the visualization. 
+		Once I had made the design choices, I had to integrate the bits and pieces of all the charts and fit into a single page. 
+		This task was messy, since it resulted into a lot of bugs cropping up while testing. It consumed a lot of time. 
+		However, if I compare from top to bottom approach, I feel it was comparatively less complex. 
+		Since the charts were all working fine, this step mainly involved giving a lot of flexibility to the user with simplicity.
+		</p>
+		<p>
+		<img src="Notes_1.jpg" alt="Notes" width="700" height="500" style="left: 450px; top: 10px">
+		<img src="Notes_2.jpg" alt="Notes" width="700" height="500" style="right: 1450px; top: 10px">
+		</p>
+		
+		<h2 class = "heading2">
+			Design Choices
+		</h2>
+		
+		<p class = "text">
+		The moment I realized we had to work with huge numbers and many variables, 
+		I had decided to keep the visualization as simple as possible. 
+		</p>
+		<ul>
+			<li class = "text">Working with large numbers is a complex task for human mind and hence any distractions can result in misinterpretation of data. 
+								Hence the page layout is has been intentionally kept without any fancy details and clutter.</li>
+			<li class = "text">The drop down menu was a natural choice over any other text input mechanism owing to large number of variables available.</li>
+			<li class = "text">The click button to clear a choice of country added is to account for any change of county choice while displaying multiple countries</li>
+			<li class = "text">Also to provide feedback on what countries the user is going to view, the names of selected countries are displayed alongside the choice button. 
+								The same are displayed using graph legends.</li>
+			<li class = "text">The selection menu is divided into two separate sections, one for the scatter plot and the other for line/Bar Charts
+								This was done intentionally to ease out what is input is required to view what fields</li>
+			<li class = "text">The Scatter plot was intended to give details on emerging trends in energy, and to highlight the influence of one variable over another. 
+								Over a period of time.It seemed redundant to view scatter plot for same set of characteristics.
+								Hence I planned a separate drop down to select years and energy to observe the trends in consumption
+								and production across various countries</li>
+		</ul>
+		<h2 class = "heading2">
+		Trends Pointed out by the Visualization
+		</h2>
+		<p class = "text">
+		The following trends can be clearly observed using the above visualization: 
+		</p>
+		<ul>
+			<li class = "text">Coal consumption increased during the 80’s decade which resulted in search of new coal mines
+								and hence corresponding increase in production of coal during the 90’s to meet the demand across the 
+								world.</li>
+			<li class = "text">Petroleum consumption can be seen increasing constantly more steeply for the 
+								developing nations and less steeply for developed countries</li>
+			<li class = "text">The consumption of electricity can be seen increasing drastically
+								while the generation of electricity falling behind.</li>
+			<li class = "text">Also to provide feedback on what countries the user is going to view, the names of selected countries are displayed alongside the choice button. 
+								The same are displayed using graph legends.</li>
+			<li class = "text">In short, we need more energy than we did back in 1980’s while we aren’t producing it much.</li>
+		</ul>
+		
+		<a href=https://www.youtube.com/watch?v=bp71jKW4Iw8&feature=youtu.be>Youtube Video for this Visualization</a>
+		
+		<p class = "text">
+		The End
+		</p>
+		
+    </body>
+</html>
