@@ -22,7 +22,7 @@
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 	<script src="https://d3js.org/d3.v4.min.js"></script>
 	<script src="StimulusQues.js"></script>
-
+	<!--<script src="ReadWrite.js"></script>-->
 		
 		<div style="position:absolute;left:800px;top:850px">
 				<button id="Submit" 
@@ -93,11 +93,27 @@
 			var illHt = 140;
 			var illWd = 200;
 			
-			var flag=false;
+			var TextBoxFlag=false;
+			
+			var dataId =0;
+			var SelOptionsTemp = [];
+			var IDvalue ;
+			var Stimulus;
 			
 			$("#Submit").hide();
-			$("#End").show();
-			$("#Start").hide();
+			$("#End").hide();
+			//$("#Start").hide();
+			
+			
+			//WriteToDB();
+			console.log("writting");
+				
+				$.ajax( { url: "mongodb://DotDotDot:Test1234@ds145093.mlab.com:45093/illusionsdata",
+		  			data: JSON.stringify( { "x" : 1 } ),
+		  			type: "POST",
+		  			contentType: "application/json" } );
+		  			
+		  			console.log("written");
 			
 			//Add Question Text
 			function addQuesText(StimFile)
@@ -129,7 +145,7 @@
 				var src = document.getElementsByTagName("BODY")[0];
 				src.appendChild(input);
 				
-				flag=true;
+				TextBoxFlag=true;
 			}
 			
 			//Delete question text
@@ -228,17 +244,27 @@
 					
 						d3.select(this).style("cursor","pointer")
 										.attr("stroke","red").style("stroke-width",5);
+						
+						
 					})
 					.on("mouseout",function(){
 					
-						//if(flga
-						d3.select(this).style("cursor","default")
+						dataId = (d3.select(this)._groups["0"]["0"].__data__);
+						
+						if(!SelOptionsTemp.includes(dataId))
+						{
+						
+							d3.select(this).style("cursor","default")
 										.attr("stroke","grey").style("stroke-width",2);
+						}
 					
 					})
 					.on("click",function(){
 						d3.select(this).attr("stroke","green").style("stroke-width",5);
-						//flag = true;
+									
+						 dataId = (d3.select(this)._groups["0"]["0"].__data__);
+						SelOptionsTemp.push(dataId);
+							
 					})
 				
 				//Display question
@@ -298,14 +324,22 @@
 							})
 							.on("mouseout",function(){
 					
-							//if(flga
-								d3.select(this).style("cursor","default")
+								dataId = (d3.select(this)._groups["0"]["0"].__data__);
+						
+								if(!SelOptionsTemp.includes(dataId))
+								{
+						
+									d3.select(this).style("cursor","default")
 										.attr("stroke","grey").style("stroke-width",2);
+								}
 					
 							})
 							.on("click",function(){
+								
 								d3.select(this).attr("stroke","green").style("stroke-width",5);
-								//flag = true;
+								 
+								 dataId = (d3.select(this)._groups["0"]["0"].__data__);
+								 SelOptionsTemp.push(dataId);
 						})
 				
 				//Display question
@@ -360,7 +394,7 @@
 				d3.selectAll("#QuesHolder").remove(); // question holder
 				d3.selectAll("#optionIm").remove(); // option images
 				
-				if(flag)
+				if(TextBoxFlag)
 				{
 					deleteTextBox();
 				}
@@ -382,24 +416,24 @@
 				return genValue;
 			}
 			
-			
+			//Show frist random question
 			$("#Start").click(function(){
 			
 				$("#Start").hide();
 				
-				var IDvalue = generateFileIds();
-				var Stimulus = StimulusImQues[IDvalue];
+				IDvalue = generateFileIds();
+				Stimulus = StimulusImQues[IDvalue];
 					
 				if(Stimulus.Label == "Image")
 				{
 					DispImCap(Stimulus);
-					flag=false;
+					TextBoxFlag=false;
 				
 				}
 				if(Stimulus.Label == "Illusion")
 				{
 					DispIllCap(Stimulus);
-					flag=false;
+					TextBoxFlag=false;
 				}
 				if(Stimulus.Label == "Text")
 				{	
@@ -412,25 +446,45 @@
 			
 			$("#Submit").click(function(){
 			
-				
-				if(counter<36)
-				{
+					// collect response before new question
+					if((Stimulus.Label == "Image")|| (Stimulus.Label == "Illusion"))
+					{
+						
+						for(var i=0;i<SelOptionsTemp.length;i++)
+						{
+							StimulusImQues[IDvalue].SelOptions.push(SelOptionsTemp[i]);
+						}
+						
+						
+					
+					}
+					
+					if(Stimulus.Label == "Text")
+					{
+						var docs= document.getElementById("ansText").value
+						StimulusImQues[IDvalue].SelOptions.push(docs);
+						//var answer = CheckAnswerTe())
+						console.log(CheckAnswerTe(IDvalue));
+					}
+					
+					// clear space for new question
 					ClearQuesIm();
 				
-					var IDvalue = generateFileIds();
-					var Stimulus = StimulusImQues[IDvalue];
+					IDvalue = generateFileIds();
+					Stimulus = StimulusImQues[IDvalue];
+					SelOptionsTemp=[];
 					
-					
+					//show new question
 					if(Stimulus.Label == "Image")
 					{
 						DispImCap(Stimulus);
-						flag=false;
-					
+						TextBoxFlag=false;
 					}
 					if(Stimulus.Label == "Illusion")
 					{
 						DispIllCap(Stimulus);
-						flag=false;
+						TextBoxFlag=false;
+						
 					}
 					if(Stimulus.Label == "Text")
 					{
@@ -439,23 +493,69 @@
 					}
 					
 					
-				}else if(counter==36)
+					
+				//}else
+				 if(counter==36)
 				{
 					ClearQuesIm();
 					$("#Submit").hide();
 					$("#End").show();
+					SelOptionsTemp=[];
 					
 				}
 				counter++;
+				
+				
 				
 			});
 			
 			$("#End").click(function(){
 			
-				window.open('https://www.google.com');
-				//window.open(url, 'https://cornell.ca1.qualtrics.com/jfe/preview/SV_7QlhEwGIgifKOrz?Q_SurveyVersionID=current&Q_CHL=preview');
+				//window.open('https://www.google.com');
+				window.open('https://cornell.ca1.qualtrics.com/jfe/preview/SV_7QlhEwGIgifKOrz?Q_SurveyVersionID=current&Q_CHL=preview');
 			
 			})
+			
+			function CheckAnswerOp(QuesID)
+			{
+				var arr1 = StimulusImQues[QuesID].SelOptions;
+				var arr2 = StimulusImQues[QuesID].Answer;
+				var counterCA=0;
+				
+				if(arr1.length != arr2.length)
+				{
+					return false;
+				}else 
+				{
+					for(var j=0;j<arr1.length;j++)
+					{
+						if(!arr1.includes(arr2[j]))
+						{
+							counterCA++;
+						}
+					}
+				}
+				if(counterCA>0)
+				{
+					return false;
+				}else
+				{
+					return true;
+				}
+				
+			}
+			
+			function CheckAnswerTe(QuesID)
+			{
+				var arr1 = StimulusImQues[QuesID].SelOptions;
+				var arr2 = StimulusImQues[QuesID].Answer;
+			
+				//console.log(arr1,arr2);
+				return (arr1===arr2);
+			}
+			
+			
+			
 			
 				
 							
