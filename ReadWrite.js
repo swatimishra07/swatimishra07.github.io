@@ -1,13 +1,23 @@
-function WriteToDB()
-			{
-				console.log("writting")
+function WriteToDB(userInfo)
+{
 				
-				{"myDate": {"$date": "2010-07-20T23:23:50Z"}}
-				
-				$.ajax( { url: "mongodb://DotDotDot:Test1234@ds145093.mlab.com:45093/illusionsdata",
-		  			data: JSON.stringify( { "x" : 1 } ),
-		  			type: "POST",
-		  			contentType: "application/json" } );
-		  			
-		  			console.log("written");
-			}
+    		//var userInfo = {"lat": 41.23, "long": 2.23, "time": {"$date": new Date().toISOString()}};
+    		var _apiKey = "N1eQIa_ozG8nn1WSGPDZ6sMB6YQejYXy";
+    		var _QueryApiKey = "&apiKey=N1eQIa_ozG8nn1WSGPDZ6sMB6YQejYXy";
+    		var _baseURL = "https://api.mlab.com/api/1/databases/illusionsdata/collections/UserData?apiKey=";
+    		var _baseQueryURL = "https://api.mlab.com/api/1/databases/illusionsdata/collections/UserData?";
+
+
+        $.ajax({
+                url: _baseURL + _apiKey,
+                data: JSON.stringify(userInfo),
+                type: "POST",
+                contentType: "application/json"
+            }).done(function (data) {
+                //userLogged = data;
+                console.log("success");
+            }).fail(function (error) {
+                console.log("Error" + error);
+            });
+       
+}

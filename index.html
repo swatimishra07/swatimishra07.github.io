@@ -22,7 +22,7 @@
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 	<script src="https://d3js.org/d3.v4.min.js"></script>
 	<script src="StimulusQues.js"></script>
-	<!--<script src="ReadWrite.js"></script>-->
+	<script src="ReadWrite.js"></script>
 		
 		<div style="position:absolute;left:800px;top:850px">
 				<button id="Submit" 
@@ -39,7 +39,7 @@
 				
 		</div>
 		
-		<div id="textDiv" style="position:absolute;left:810px;top:300px" >
+		<div id="textDiv" style="position:absolute;left:800px;top:300px" >
 				<p id="textPara" ></p>
 					
 		</div>
@@ -61,6 +61,11 @@
 						type="button" 
 						class="btn btn-primary btn-lg" 
 						style="height:200px;width:250px;font-size:40px; background-color:#e7e7e7;color: black">Take Survey</button>
+		</div>
+		
+		<div id="FeedbackDiv" style="position:absolute;left:850px;top:350px" >
+				<p id="FeedbackPara" ></p>
+					
 		</div>
 		
 		
@@ -104,16 +109,12 @@
 			$("#End").hide();
 			//$("#Start").hide();
 			
+			var UserData = [];
 			
-			//WriteToDB();
-			console.log("writting");
-				
-				$.ajax( { url: "mongodb://DotDotDot:Test1234@ds145093.mlab.com:45093/illusionsdata",
-		  			data: JSON.stringify( { "x" : 1 } ),
-		  			type: "POST",
-		  			contentType: "application/json" } );
-		  			
-		  			console.log("written");
+			var quesTime = 0;//new Date().toUTCString();
+			var ansTime = 0;
+			
+			//console.log(quesTime);
 			
 			//Add Question Text
 			function addQuesText(StimFile)
@@ -260,7 +261,7 @@
 					
 					})
 					.on("click",function(){
-						d3.select(this).attr("stroke","green").style("stroke-width",5);
+						d3.select(this).attr("stroke","#4CAF50").style("stroke-width",5);
 									
 						 dataId = (d3.select(this)._groups["0"]["0"].__data__);
 						SelOptionsTemp.push(dataId);
@@ -336,7 +337,7 @@
 							})
 							.on("click",function(){
 								
-								d3.select(this).attr("stroke","green").style("stroke-width",5);
+								d3.select(this).attr("stroke","#4CAF50").style("stroke-width",5);
 								 
 								 dataId = (d3.select(this)._groups["0"]["0"].__data__);
 								 SelOptionsTemp.push(dataId);
@@ -408,9 +409,10 @@
 				var genValue;
 				do{
 				
-					genValue = Math.floor((Math.random()*35) + 1);
+					genValue = Math.floor((Math.random()*36));
 					
-				}while(generatedIDs.indexOf(genValue)>-1)
+					
+				}while((generatedIDs.indexOf(genValue)>-1)&&(counter<36))
 				
 				generatedIDs.push(genValue);
 				return genValue;
@@ -423,6 +425,7 @@
 				
 				IDvalue = generateFileIds();
 				Stimulus = StimulusImQues[IDvalue];
+				//quesTime = new Date().toUTCString();
 					
 				if(Stimulus.Label == "Image")
 				{
@@ -439,13 +442,17 @@
 				{	
 					DispTexCap(Stimulus);
 				}
-				counter++;
+				
 				$("#Submit").show();
+				quesTime = new Date().toUTCString();
 			
 			})
 			
 			$("#Submit").click(function(){
 			
+				ansTime = new Date().toUTCString();
+				if(counter<36)
+				{
 					// collect response before new question
 					if((Stimulus.Label == "Image")|| (Stimulus.Label == "Illusion"))
 					{
@@ -455,8 +462,16 @@
 							StimulusImQues[IDvalue].SelOptions.push(SelOptionsTemp[i]);
 						}
 						
+						var QDetails={QuesNum:StimulusImQues[IDvalue].fileID,
+									  QuesDispTime: quesTime ,
+									  UserAns: StimulusImQues[IDvalue].SelOptions,
+									  AnsEntTime: ansTime, 
+									  ActualAns: StimulusImQues[IDvalue].Answer
+									  }
 						
-					
+						CheckAnswerOp(IDvalue);			  
+						UserData.push(QDetails);
+						
 					}
 					
 					if(Stimulus.Label == "Text")
@@ -464,48 +479,97 @@
 						var docs= document.getElementById("ansText").value
 						StimulusImQues[IDvalue].SelOptions.push(docs);
 						//var answer = CheckAnswerTe())
-						console.log(CheckAnswerTe(IDvalue));
+						var QDetails={QuesNum:StimulusImQues[IDvalue].fileID,
+									  QuesDispTime: quesTime ,
+									  UserAns: StimulusImQues[IDvalue].SelOptions,
+									  AnsEntTime: ansTime, 
+									  ActualAns: StimulusImQues[IDvalue].Answer
+									  }
+									  
+						UserData.push(QDetails);
+						CheckAnswerTe(IDvalue);
 					}
 					
 					// clear space for new question
 					ClearQuesIm();
-				
-					IDvalue = generateFileIds();
-					Stimulus = StimulusImQues[IDvalue];
-					SelOptionsTemp=[];
+					$("#Submit").hide();
+					//console.log(UserData,quesTime,ansTime);
+					setTimeout(function (){
 					
-					//show new question
-					if(Stimulus.Label == "Image")
+						$("#Submit").show();
+						counter++;
+						IDvalue = generateFileIds();
+						//console.log("IDvalue=", IDvalue,"counter=",counter);
+						Stimulus = StimulusImQues[IDvalue];
+						SelOptionsTemp=[];
+					
+						//show new question
+						if(Stimulus.Label == "Image")
+						{
+							DispImCap(Stimulus);
+							TextBoxFlag=false;
+						}
+						if(Stimulus.Label == "Illusion")
+						{
+							DispIllCap(Stimulus);
+							TextBoxFlag=false;
+						
+						}
+						if(Stimulus.Label == "Text")
+						{
+							DispTexCap(Stimulus);
+						}
+						quesTime = new Date().toUTCString();
+					
+					},2000)
+					
+					
+					
+				}else
+				{
+					//collect last response
+					if((Stimulus.Label == "Image")|| (Stimulus.Label == "Illusion"))
 					{
-						DispImCap(Stimulus);
-						TextBoxFlag=false;
-					}
-					if(Stimulus.Label == "Illusion")
-					{
-						DispIllCap(Stimulus);
-						TextBoxFlag=false;
+						
+						for(var i=0;i<SelOptionsTemp.length;i++)
+						{
+							StimulusImQues[IDvalue].SelOptions.push(SelOptionsTemp[i]);
+						}
+						
+						var QDetails={QuesNum:StimulusImQues[IDvalue].fileID,
+									  QuesDispTime: 1 ,
+									  UserAns: StimulusImQues[IDvalue].SelOptions,
+									  AnsEntTime: 1, 
+									  ActualAns: StimulusImQues[IDvalue].Answer
+									  }
+						
+						CheckAnswerOp(IDvalue);			  
+						UserData.push(QDetails);
 						
 					}
+					
 					if(Stimulus.Label == "Text")
 					{
-					
-						DispTexCap(Stimulus);
+						var docs= document.getElementById("ansText").value
+						StimulusImQues[IDvalue].SelOptions.push(docs);
+						//var answer = CheckAnswerTe())
+						var QDetails={QuesNum:StimulusImQues[IDvalue].fileID,
+									  QuesDispTime: 1 ,
+									  UserAns: StimulusImQues[IDvalue].SelOptions,
+									  AnsEntTime: 1, 
+									  ActualAns: StimulusImQues[IDvalue].Answer
+									  }
+									  
+						UserData.push(QDetails);
+						CheckAnswerTe(IDvalue);
 					}
-					
-					
-					
-				//}else
-				 if(counter==36)
-				{
 					ClearQuesIm();
 					$("#Submit").hide();
 					$("#End").show();
+					WriteToDB(UserData);
 					SelOptionsTemp=[];
 					
 				}
-				counter++;
-				
-				
 				
 			});
 			
@@ -522,9 +586,11 @@
 				var arr2 = StimulusImQues[QuesID].Answer;
 				var counterCA=0;
 				
+				//console.log(arr1,arr2);
+				
 				if(arr1.length != arr2.length)
 				{
-					return false;
+					DispFailure();
 				}else 
 				{
 					for(var j=0;j<arr1.length;j++)
@@ -534,27 +600,61 @@
 							counterCA++;
 						}
 					}
+					if(counterCA>0)
+					{
+						DispFailure();
+					}else
+					{
+						DispSuccess();
+					}
 				}
-				if(counterCA>0)
-				{
-					return false;
-				}else
-				{
-					return true;
-				}
-				
 			}
 			
 			function CheckAnswerTe(QuesID)
 			{
-				var arr1 = StimulusImQues[QuesID].SelOptions;
-				var arr2 = StimulusImQues[QuesID].Answer;
+				var arr1 = (StimulusImQues[QuesID].SelOptions).toString();
+				var arr2 = (StimulusImQues[QuesID].Answer).toString();
 			
-				//console.log(arr1,arr2);
-				return (arr1===arr2);
+				if(arr1===arr2)
+					DispSuccess();
+				else
+					DispFailure();
 			}
 			
+			function DispSuccess()
+			{
+			  	
+			  	var textSuc = document.getElementById("FeedbackPara");
+			  	textSuc.style.fontSize = "55px";
+			  	textSuc.style.fontWeight = "900";
+			  	textSuc.style.color = "#238443"
+			   	textSuc.innerHTML = "Correct Answer";
+			   	
+			   	//remove after 2 seconds
+			  	setTimeout(function () {
+			  		var textSuc = document.getElementById("FeedbackPara");
+			  		textSuc.innerHTML = "";
+        		
+   				 }, 2000);
+			  	//console.log("Success");
+			}
 			
+			function DispFailure()
+			{
+			  //console.log("Failure");
+			   var textFail = document.getElementById("FeedbackPara");
+			   textFail.style.fontSize = "55px";
+			   textFail.style.fontWeight = "900";
+			   textFail.style.color = "#d7301f"
+			   textFail.innerHTML = "InCorrect Answer";
+			   
+			   //remove after 2 seconds
+			  	setTimeout(function () {
+			  		var textFail = document.getElementById("FeedbackPara");
+			  		textFail.innerHTML = "";
+        		
+   				 }, 2000);
+			}
 			
 			
 				
