@@ -128,6 +128,7 @@
 			var ansTime = 0;
 			
 			//console.log(quesTime);
+			var TimerValue = 500;
 			
 			//Add Question Text
 			function addQuesText(StimFile)
@@ -551,7 +552,7 @@
 						}
 						quesTime = new Date().toUTCString();
 					
-					},750)
+					},TimerValue)
 					
 					
 					
@@ -593,16 +594,19 @@
 						UserData.push(QDetails);
 						CheckAnswerTe(IDvalue);
 					}
-					setTimeout(function(){
 					
 					ClearQuesIm();
 					$("#Submit").hide();
-					$("#End").show();
-					WriteToDB(UserData);
 					SelOptionsTemp=[];
 					
+					setTimeout(function(){
 					
-					},750)
+					
+						$("#End").show();
+					
+					},TimerValue)
+					
+					WriteToDB(UserData);
 					
 					
 				}
@@ -671,7 +675,7 @@
 			  		var textSuc = document.getElementById("FeedbackPara");
 			  		textSuc.innerHTML = "";
         		
-   				 }, 750);
+   				 }, TimerValue);
 			  	//console.log("Success");
 			}
 			
@@ -689,7 +693,7 @@
 			  		var textFail = document.getElementById("FeedbackPara");
 			  		textFail.innerHTML = "";
         		
-   				 }, 750);
+   				 }, TimerValue);
 			}
 			
 			
