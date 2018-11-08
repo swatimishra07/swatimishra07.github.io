@@ -122,7 +122,7 @@ var StimulusImQues = [
 					  //Question 16 -Image
 					  {fileID:16,
 					   SelOptions:[],
-					   Answer:[],
+					   Answer:[6],
 					   QuesText:"Select the image that matches the label N",
 					   Label:"Image"
 					  }
@@ -162,7 +162,7 @@ var StimulusImQues = [
 					  //Question 21 -Image
 					  {fileID:21,
 					   SelOptions:[],
-					   Answer:[1,2,5,9],
+					   Answer:[1,5,9],
 					   QuesText:"Select all images with mountains",
 					   Label:"Image"
 					  }
@@ -170,7 +170,7 @@ var StimulusImQues = [
 					  //Question 22 -Image
 					  {fileID:22,
 					   SelOptions:[],
-					   Answer:8,
+					   Answer:[8],
 					   QuesText:"Select the image with raw apples",
 					   Label:"Image"
 					  }

@@ -24,7 +24,7 @@
 	<script src="StimulusQues.js"></script>
 	<script src="ReadWrite.js"></script>
 		
-		<div style="position:absolute;left:800px;top:850px">
+		<div style="position:absolute;left:800px;top:950px">
 				<button id="Submit" 
 						type="button" 
 						class="btn btn-default btn-lg"
@@ -33,21 +33,22 @@
 		
 		
 		
-		<div id="quesDiv" style="position:absolute;left:940px;top:150px" >
-				<svg id="QSVG" width="280" height="180" ></svg>
+		<div id="quesDiv" style="position:absolute;left:840px;top:10px" >
+				<svg id="QSVG" width="500" height="400" ></svg>
 				<div id="QDiv" style="position:absolute;left:0px;top:0px" ></div>
+				<div id="TDiv" style="position:absolute;left:100px;top:200px" ></div>
 				
 		</div>
 		
-		<div id="textDiv" style="position:absolute;left:800px;top:300px" >
+		<div id="textDiv" style="position:absolute;left:800px;top:400px" >
 				<p id="textPara" ></p>
 					
 		</div>
 		
 		
-		<div id="OptDiv" style="position:absolute;left:800px;top:350px" > </div>
+		<div id="OptDiv" style="position:absolute;left:800px;top:450px" > </div>
 				
-		<svg id="OPSVG" width="500" height="500" style="position:absolute;left:800px;top:350px" ></svg>
+		<svg id="OPSVG" width="500" height="500" style="position:absolute;left:800px;top:450px" ></svg>
 		
 		<div style="position:absolute;left:1000px;top:350px">
 				<button id="Start"
@@ -79,8 +80,8 @@
 			var counter=1;
 			var generatedIDs =[];
 			
-			var QuImHt = 127
-			var QuImWd = 125
+			var QuImHt = 300;
+			var QuImWd = 300;
 			
 			var OpImHt = 136
 			var OpImWd = 136;
@@ -89,14 +90,22 @@
 			var TeImWd = 245;
 			
 			var rectBor = 5;
+			var rectBorX = 120;
+			var rectBorY = 195;
+			
 			var OpGap = 10;
 			var ImBor = 10;
+			var ImBorTextX = 25;
+			var ImBorTextY = 0;
 			
 			var LeftTextBox = 960;
-			var TopTextBox = 400;
+			var TopTextBox = 500;
 			
-			var illHt = 140;
-			var illWd = 200;
+			//var illHt = 140;
+			//var illWd = 200;
+			
+			var illHt = 350;
+			var illWd = 450;//400;
 			
 			var TextBoxFlag=false;
 			
@@ -108,6 +117,10 @@
 			$("#Submit").hide();
 			$("#End").hide();
 			//$("#Start").hide();
+			
+			//TempStimulus = StimulusImQues[35];
+				
+			//DispImCap(TempStimulus);
 			
 			var UserData = [];
 			
@@ -168,7 +181,7 @@
 			function DispTexCap(filename)
 			{
 				//Show Question Image
-				showQuesIm(filename.fileID);
+				showQuesText(filename.fileID);
 				
 				//append question holder
 				var quesSVG = d3.select("#QSVG");
@@ -177,8 +190,8 @@
 					.enter()
 					.append("rect")
 					.attr("id","QuesHolder")
-					.attr("x",rectBor)
-					.attr("y",rectBor)
+					.attr("x",rectBorX)
+					.attr("y",rectBorY)
 					.attr("width",TeImWd+(2*rectBor))
 					.attr("height",TeImHt+(2*rectBor))
 					.style("fill","none")
@@ -196,13 +209,13 @@
 			//Display Image Captcha Question
 			function DispImCap(filename)
 			{
-				if(!(filename.fileID<=24 && filename.fileID>=14))
+				if(filename.fileID==13 || filename.fileID==15 || filename.fileID==23 || filename.fileID==24 )
 				{
 					//Show Question Image
 					showQuesIm(filename.fileID);
 					
 					//append question holder
-					var quesSVG = d3.select("#QSVG");
+					/*var quesSVG = d3.select("#QSVG");
 					quesSVG.selectAll("rect")
 						.data([filename.fileID])
 						.enter()
@@ -214,7 +227,7 @@
 						.attr("height",QuImHt+(2*rectBor))
 						.style("fill","none")
 						.style("stroke","grey")
-						.style("stroke-width",2);
+						.style("stroke-width",2);*/
 						
 					//console.log(filename.fileID);
 					
@@ -281,7 +294,7 @@
 					showQuesIm(filename.fileID);
 					
 					//append question holder
-					var quesSVG = d3.select("#QSVG");
+					/*var quesSVG = d3.select("#QSVG");
 					quesSVG.selectAll("rect")
 						.data([filename.fileID])
 						.enter()
@@ -293,7 +306,7 @@
 						.attr("height",illHt+(2*rectBor))
 						.style("fill","none")
 						.style("stroke","grey")
-						.style("stroke-width",2);
+						.style("stroke-width",2);*/
 						
 				
 				
@@ -361,6 +374,23 @@
 				
 				//append image
 				var src = document.getElementById("QDiv");
+				src.appendChild(img);
+				
+			}
+			
+			//show question text
+			function showQuesText(QuesIden)
+			{
+	        	//create image element
+	        	var img = document.createElement("img");
+				img.src = "Q"+QuesIden+".png";
+				img.id = "questionIm";
+				img.style.position = "absolute";
+				img.style.left = ImBorTextX+"px";
+				img.style.top = ImBorTextY+"px";
+				
+				//append image
+				var src = document.getElementById("TDiv");
 				src.appendChild(img);
 				
 			}
@@ -521,7 +551,7 @@
 						}
 						quesTime = new Date().toUTCString();
 					
-					},2000)
+					},750)
 					
 					
 					
@@ -563,11 +593,17 @@
 						UserData.push(QDetails);
 						CheckAnswerTe(IDvalue);
 					}
+					setTimeout(function(){
+					
 					ClearQuesIm();
 					$("#Submit").hide();
 					$("#End").show();
 					WriteToDB(UserData);
 					SelOptionsTemp=[];
+					
+					
+					},750)
+					
 					
 				}
 				
@@ -635,7 +671,7 @@
 			  		var textSuc = document.getElementById("FeedbackPara");
 			  		textSuc.innerHTML = "";
         		
-   				 }, 2000);
+   				 }, 750);
 			  	//console.log("Success");
 			}
 			
@@ -653,7 +689,7 @@
 			  		var textFail = document.getElementById("FeedbackPara");
 			  		textFail.innerHTML = "";
         		
-   				 }, 2000);
+   				 }, 750);
 			}
 			
 			
