@@ -114,6 +114,8 @@
 			var IDvalue ;
 			var Stimulus;
 			
+			var AnswerStatus;
+			
 			$("#Submit").hide();
 			$("#End").hide();
 			//$("#Start").hide();
@@ -126,6 +128,10 @@
 			
 			var quesTime = 0;//new Date().toUTCString();
 			var ansTime = 0;
+			
+			//var tempData = new Date().toGMTString();
+			//tempData.setHours(tempData.getHours() + tempData.getTimezoneOffset()/60 - 5);
+			//console.log(tempData);
 			
 			//console.log(quesTime);
 			var TimerValue = 500;
@@ -257,9 +263,13 @@
 					.style("fill-opacity",0)
 			        .on("mouseover",function(){
 					
-						d3.select(this).style("cursor","pointer")
-										.attr("stroke","red").style("stroke-width",5);
-						
+						dataId = (d3.select(this)._groups["0"]["0"].__data__);
+						if(!SelOptionsTemp.includes(dataId))
+						{
+								
+							d3.select(this).style("cursor","pointer")
+									.attr("stroke","red").style("stroke-width",5);
+						}
 						
 					})
 					.on("mouseout",function(){
@@ -275,12 +285,24 @@
 					
 					})
 					.on("click",function(){
-						d3.select(this).attr("stroke","#4CAF50").style("stroke-width",5);
-									
-						 dataId = (d3.select(this)._groups["0"]["0"].__data__);
-						SelOptionsTemp.push(dataId);
+						
+						dataId = (d3.select(this)._groups["0"]["0"].__data__);
+						
+						if(!SelOptionsTemp.includes(dataId))
+						{
+							// if the data does not exist then enter it
+							d3.select(this).attr("stroke","#4CAF50").style("stroke-width",5);
+							SelOptionsTemp.push(dataId);
+						}
+						else
+						{
+							// if the data exists then remove it
+							d3.select(this).attr("stroke","grey").style("stroke-width",2);
+							SelOptionsTemp.splice(SelOptionsTemp.indexOf(dataId),1);
 							
+						}
 					})
+					
 				
 				//Display question
 				addQuesText(filename);
@@ -333,9 +355,16 @@
 							.style("fill","white")
 							.style("fill-opacity",0)
 			        		.on("mouseover",function(){
-					
-								d3.select(this).style("cursor","pointer")
+								
+								dataId = (d3.select(this)._groups["0"]["0"].__data__);
+								if(!SelOptionsTemp.includes(dataId))
+								{
+								
+									d3.select(this).style("cursor","pointer")
 										.attr("stroke","red").style("stroke-width",5);
+								}
+										
+								
 							})
 							.on("mouseout",function(){
 					
@@ -350,12 +379,23 @@
 					
 							})
 							.on("click",function(){
-								
-								d3.select(this).attr("stroke","#4CAF50").style("stroke-width",5);
-								 
-								 dataId = (d3.select(this)._groups["0"]["0"].__data__);
-								 SelOptionsTemp.push(dataId);
-						})
+						
+								dataId = (d3.select(this)._groups["0"]["0"].__data__);
+						
+								if(!SelOptionsTemp.includes(dataId))
+								{
+									// if the data does not exist then enter it
+									d3.select(this).attr("stroke","#4CAF50").style("stroke-width",5);
+									SelOptionsTemp.push(dataId);
+								}
+								else
+								{
+									// if the data exists then remove it
+									d3.select(this).attr("stroke","grey").style("stroke-width",2);
+									SelOptionsTemp.splice(SelOptionsTemp.indexOf(dataId),1);
+							
+								}
+							})
 				
 				//Display question
 				addQuesText(filename);
@@ -475,15 +515,21 @@
 				}
 				
 				$("#Submit").show();
-				quesTime = new Date().toUTCString();
+				
+				quesTime = new Date();//.toUTCString();
+				quesTime.setHours(quesTime.getHours() + quesTime.getTimezoneOffset()/60 - 5);
 			
 			})
 			
 			$("#Submit").click(function(){
 			
-				ansTime = new Date().toUTCString();
+				ansTime = new Date();//.toUTCString();
+				ansTime.setHours(ansTime.getHours() + ansTime.getTimezoneOffset()/60 - 5);
+				
 				if(counter<36)
 				{
+					//console.log(SelOptionsTemp);
+					
 					// collect response before new question
 					if((Stimulus.Label == "Image")|| (Stimulus.Label == "Illusion"))
 					{
@@ -493,14 +539,15 @@
 							StimulusImQues[IDvalue].SelOptions.push(SelOptionsTemp[i]);
 						}
 						
+						CheckAnswerOp(IDvalue);
 						var QDetails={QuesNum:StimulusImQues[IDvalue].fileID,
 									  QuesDispTime: quesTime ,
 									  UserAns: StimulusImQues[IDvalue].SelOptions,
 									  AnsEntTime: ansTime, 
-									  ActualAns: StimulusImQues[IDvalue].Answer
+									  ActualAns: StimulusImQues[IDvalue].Answer,
+									  Status: AnswerStatus
 									  }
 						
-						CheckAnswerOp(IDvalue);			  
 						UserData.push(QDetails);
 						
 					}
@@ -510,15 +557,18 @@
 						var docs= document.getElementById("ansText").value
 						StimulusImQues[IDvalue].SelOptions.push(docs);
 						//var answer = CheckAnswerTe())
+						
+						CheckAnswerTe(IDvalue);
 						var QDetails={QuesNum:StimulusImQues[IDvalue].fileID,
 									  QuesDispTime: quesTime ,
 									  UserAns: StimulusImQues[IDvalue].SelOptions,
 									  AnsEntTime: ansTime, 
-									  ActualAns: StimulusImQues[IDvalue].Answer
+									  ActualAns: StimulusImQues[IDvalue].Answer,
+									  Status: AnswerStatus
 									  }
 									  
 						UserData.push(QDetails);
-						CheckAnswerTe(IDvalue);
+						
 					}
 					
 					// clear space for new question
@@ -550,7 +600,9 @@
 						{
 							DispTexCap(Stimulus);
 						}
-						quesTime = new Date().toUTCString();
+						
+						quesTime = new Date();//.toUTCString();
+						quesTime.setHours(quesTime.getHours() + quesTime.getTimezoneOffset()/60 - 5);
 					
 					},TimerValue)
 					
@@ -566,15 +618,16 @@
 						{
 							StimulusImQues[IDvalue].SelOptions.push(SelOptionsTemp[i]);
 						}
+						CheckAnswerOp(IDvalue);
 						
 						var QDetails={QuesNum:StimulusImQues[IDvalue].fileID,
-									  QuesDispTime: 1 ,
+									  QuesDispTime: quesTime ,
 									  UserAns: StimulusImQues[IDvalue].SelOptions,
-									  AnsEntTime: 1, 
-									  ActualAns: StimulusImQues[IDvalue].Answer
+									  AnsEntTime: ansTime, 
+									  ActualAns: StimulusImQues[IDvalue].Answer,
+									  Status: AnswerStatus
 									  }
 						
-						CheckAnswerOp(IDvalue);			  
 						UserData.push(QDetails);
 						
 					}
@@ -584,15 +637,19 @@
 						var docs= document.getElementById("ansText").value
 						StimulusImQues[IDvalue].SelOptions.push(docs);
 						//var answer = CheckAnswerTe())
+						
+						CheckAnswerTe(IDvalue);
+						
 						var QDetails={QuesNum:StimulusImQues[IDvalue].fileID,
-									  QuesDispTime: 1 ,
+									  QuesDispTime: quesTime ,
 									  UserAns: StimulusImQues[IDvalue].SelOptions,
-									  AnsEntTime: 1, 
-									  ActualAns: StimulusImQues[IDvalue].Answer
+									  AnsEntTime: ansTime, 
+									  ActualAns: StimulusImQues[IDvalue].Answer,
+									  Status: AnswerStatus
 									  }
 									  
 						UserData.push(QDetails);
-						CheckAnswerTe(IDvalue);
+						
 					}
 					
 					ClearQuesIm();
@@ -626,26 +683,53 @@
 				var arr2 = StimulusImQues[QuesID].Answer;
 				var counterCA=0;
 				
-				//console.log(arr1,arr2);
+				//console.log("selected", arr1, "actual", arr2);
 				
-				if(arr1.length != arr2.length)
+				for(var j=0;j<arr1.length;j++)
 				{
-					DispFailure();
-				}else 
-				{
-					for(var j=0;j<arr1.length;j++)
+					if(arr2.includes(arr1[j]))
 					{
-						if(!arr1.includes(arr2[j]))
-						{
-							counterCA++;
-						}
+						counterCA++;
 					}
-					if(counterCA>0)
-					{
-						DispFailure();
-					}else
+				}
+				//console.log(counterCA);
+				
+				// for image questions
+				if(QuesID>=12 && QuesID<24)
+				{
+					if(counterCA >= arr2.length)
 					{
 						DispSuccess();
+					}else
+					{
+						DispFailure();
+					}
+				}else if(QuesID == 26)
+				{
+					if(counterCA == 3)
+					{
+						DispSuccess();
+					}else
+					{
+						DispFailure();
+					}
+				}else if(QuesID == 27)
+				{
+					if(counterCA == 1)
+					{
+						DispSuccess();
+					}else
+					{
+						DispFailure();
+					}
+				}else
+				{
+					if(counterCA == 2)
+					{
+						DispSuccess();
+					}else
+					{
+						DispFailure();
 					}
 				}
 			}
@@ -663,6 +747,7 @@
 			
 			function DispSuccess()
 			{
+			  	AnswerStatus="Success";
 			  	
 			  	var textSuc = document.getElementById("FeedbackPara");
 			  	textSuc.style.fontSize = "55px";
@@ -682,6 +767,8 @@
 			function DispFailure()
 			{
 			  //console.log("Failure");
+			  
+			   AnswerStatus="Failure";
 			   var textFail = document.getElementById("FeedbackPara");
 			   textFail.style.fontSize = "55px";
 			   textFail.style.fontWeight = "900";

@@ -195,7 +195,7 @@ var StimulusImQues = [
 					  {fileID:25,
 					   SelOptions:[],
 					   Answer:[3,4,6],
-					   QuesText:"Select all the different people you see in the image",
+					   QuesText:"Select any 2 images of the people that you identified in the above picture",
 					   Label:"Illusion"
 					  }
 					  ,
@@ -203,7 +203,7 @@ var StimulusImQues = [
 					  {fileID:26,
 					   SelOptions:[],
 					   Answer:[1,3,4,7],
-					   QuesText:"Select all the different animals you see in the image",
+					   QuesText:"Select any 2 images of animals that you identified in the above picture",
 					   Label:"Illusion"
 					  }
 					  ,
@@ -211,15 +211,15 @@ var StimulusImQues = [
 					  {fileID:27,
 					   SelOptions:[],
 					   Answer:[1,2,5,8,9],
-					   QuesText:"Select all living things you see in the image",
+					   QuesText:"Select any 3 images of things that you identified in the above picture",
 					   Label:"Illusion"
 					  }
 					  ,
 					  //Question 28 -Illusion
 					  {fileID:28,
 					   SelOptions:[],
-					   Answer:[4,5,6],
-					   QuesText:"Select all living things you see in the image",
+					   Answer:[4,5,7],
+					   QuesText:"Select any 2 images of things that you identified in the above picture",
 					   Label:"Illusion"
 					  }
 					  ,
@@ -227,7 +227,7 @@ var StimulusImQues = [
 					  {fileID:29,
 					   SelOptions:[],
 					   Answer:[2,5],
-					   QuesText:"Select all things that you see in the image",
+					   QuesText:"Select any 1 image of things that you identified in the above picture",
 					   Label:"Illusion"
 					  }
 					  ,
@@ -235,7 +235,7 @@ var StimulusImQues = [
 					  {fileID:30,
 					   SelOptions:[],
 					   Answer:[3,6,8],
-					   QuesText:"Select all things you see in the image",
+					   QuesText:"Select any 2 images of things that you identified in the above picture",
 					   Label:"Illusion"
 					  }
 					  ,
@@ -243,15 +243,15 @@ var StimulusImQues = [
 					  {fileID:31,
 					   SelOptions:[],
 					   Answer:[1,5,7],
-					   QuesText:"Select all animals you in the image",
+					   QuesText:"Select any 2 images of animals that you identified in the above picture",
 					   Label:"Illusion"
 					  }
 					  ,
 					  //Question 32 -Illusion
 					  {fileID:32,
-					   SelOptions:[1,4,6,8],
-					   Answer:[],
-					   QuesText:"Select all that you see in the image",
+					   SelOptions:[],
+					   Answer:[1,4,6,8],
+					   QuesText:"Select any 2 images of things that you identified in the above picture",
 					   Label:"Illusion"
 					  }
 					  ,
@@ -259,7 +259,7 @@ var StimulusImQues = [
 					  {fileID:33,
 					   SelOptions:[],
 					   Answer:[2,4,7],
-					   QuesText:"Select all things you see in the image",
+					   QuesText:"Select any 2 images of things that you identified in the above picture",
 					   Label:"Illusion"
 					  }
 					  ,
@@ -267,7 +267,7 @@ var StimulusImQues = [
 					  {fileID:34,
 					   SelOptions:[],
 					   Answer:[2,3,7],
-					   QuesText:"Select all that you see in the image",
+					   QuesText:"Select any 2 images of things that you identified in the above picture",
 					   Label:"Illusion"
 					  }
 					  ,
@@ -275,7 +275,7 @@ var StimulusImQues = [
 					  {fileID:35,
 					   SelOptions:[],
 					   Answer:[1,2,7],
-					   QuesText:"Select all that you see in the image",
+					   QuesText:"Select any 2 images of things that you identified in the above picture",
 					   Label:"Illusion"
 					  },
 					  
@@ -283,7 +283,7 @@ var StimulusImQues = [
 					  {fileID:36,
 					   SelOptions:[],
 					   Answer:[1,2,5,6],
-					   QuesText:"Select all that you see in the image",
+					   QuesText:"Select any 2 images of things that you identified in the above picture",
 					   Label:"Illusion"
 					  }
 					];
